@@ -1,0 +1,93 @@
+.cardPanel {
+	border: 2px solid #000;
+	border-radius: 5px;
+	cursor: move;
+	position: absolute;
+	width: 200px;
+	height: 100px;
+	background: white;
+}
+
+.photoBlock {
+	display: inline-block;
+	border: 1px solid #000;
+	border-radius: 4px;
+	position: relative;
+	margin-left: 4px;
+	margin-top: 4px;
+	width: 31%;
+	height: 90%;
+	vertical-align: top;
+}
+
+.infoBlock {
+	display: inline-block;
+	border: none;
+	position: relative;
+	margin-left: 4px;
+	margin-top: 4px;
+	width: 54%;
+	height: 90%;
+	margin-top: 4px;
+	vertical-align: top;
+}
+
+.name {
+	margin-left: 4px;
+	margin-top: 4px;
+}
+
+.iconPanel {
+	display: block;
+	border: none;
+	position: relative;
+	margin-right: 4px;
+	margin-top: 4px;
+	float: right;
+	width: 8%;
+	height: 90%;
+}
+
+.icon {
+	cursor: pointer;
+	width: 15px;
+	height: 15px;
+	transition-duration: 0.2s;
+	transition-property: transform;
+	transition-timing-function: ease;
+}
+
+.deleteIcon {
+	margin-top: 240%;
+}
+
+.icon:hover {
+	transform: scale(1.5);
+}
+
+.noselect {
+	-webkit-touch-callout: none; /* iOS Safari */
+	-webkit-user-select: none; /* Safari */
+	-khtml-user-select: none; /* Konqueror HTML */
+	-moz-user-select: none; /* Old versions of Firefox */
+	-ms-user-select: none; /* Internet Explorer/Edge */
+	user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+
+.select {
+	-webkit-touch-callout: text; /* iOS Safari */
+	-webkit-user-select: text; /* Safari */
+	-khtml-user-select: text; /* Konqueror HTML */
+	-moz-user-select: text; /* Old versions of Firefox */
+	-ms-user-select: text; /* Internet Explorer/Edge */
+	user-select: text; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+}
+
+.canvas {
+	position: absolute;
+	z-index: -1;
+/* 	width: 100%;
+	height: 100%; */
+}

@@ -1,0 +1,1 @@
+delete from people where p_id = :id;
