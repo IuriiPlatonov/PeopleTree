@@ -1,6 +1,7 @@
 class PersonCard {
 	
-  constructor(person, drawConnectFunc) {
+  constructor(person, desktopPanel, drawConnectFunc) {
+	this.desktopPanel = desktopPanel;
 	this.person = person;
 	this.drawConnectFunc = drawConnectFunc;
 	this.delta_x = 0;
@@ -19,10 +20,12 @@ class PersonCard {
 	this.deleteCard = this.deleteCard.bind(this);	
 	this.movePersonCard = this.movePersonCard.bind(this);	
 	this.saveXY = this.saveXY.bind(this);	
-	this.clearXY = this.clearXY.bind(this);	 
+	this.clearXY = this.clearXY.bind(this);
+	this.init = this.init.bind(this);
   }
 
   init() {
+	if (this.cardPanel) this.desktopPanel.removeChild(this.cardPanel); 
 	if (navigator.userAgent.indexOf("MSIE") != -1) this.ie = 1;  
     this.initCardPanel();
     this.initPhotoBlock();
@@ -32,9 +35,9 @@ class PersonCard {
   }
 
   initCardPanel() {
-    this.cardPanel = DomUtils.addDivWithClasses(document.body, ['cardPanel', 'noselect'] );
-    this.cardPanel.style.left = this.person.x + 'px';
-    this.cardPanel.style.top = this.person.y + 'px';
+    this.cardPanel = DomUtils.addDivWithClasses(this.desktopPanel, ['cardPanel', 'noselect'] );
+    this.cardPanel.style.left = this.person.posX + 'px';
+    this.cardPanel.style.top = this.person.posY + 'px';
   }
 
   initPhotoBlock() {
@@ -43,10 +46,10 @@ class PersonCard {
 
   initInfoBlock() {
     let infoPanel = DomUtils.addDiv( this.cardPanel, 'infoBlock');
-    DomUtils.addDivWithText(infoPanel, 'name', '<span>' + this.person.name + '</span>');
-    DomUtils.addDivWithText(infoPanel, 'name', '<span>' + this.person.secondName + '</span>');
-    DomUtils.addDivWithText(infoPanel, 'name', '<span>' + this.person.patronymic + '</span>');
-    DomUtils.addDivWithText(infoPanel, 'name', '<span>' + this.person.age + '</span>');
+    this.nameText = DomUtils.addDivWithText(infoPanel, 'name', '<span>' + this.person.firstName + '</span>');
+    this.secondNameText = DomUtils.addDivWithText(infoPanel, 'name', '<span>' + this.person.secondName + '</span>');
+    this.patronymicText = DomUtils.addDivWithText(infoPanel, 'name', '<span>' + this.person.patronymic + '</span>');
+    this.ageText = DomUtils.addDivWithText(infoPanel, 'name', '<span>' + this.person.age + '</span>');
   }
 
   initButtonBlock() {
@@ -55,33 +58,67 @@ class PersonCard {
     this.addButton = DomUtils.addImg(buttonPanel, 'icon', 'images/plus.svg');
     this.deleteButton = DomUtils.addImgWithClasses(buttonPanel, ['icon', 'deleteIcon'], 'images/delete.svg');
   }
+  
+  initListener() {
+	    if (this.ie) {
+	      this.cardPanel.onmousedown = this.saveXY;
+	      document.onmouseup = this.clearXY;
+	      this.deleteButton.onclick = this.deleteCard;
+	      this.settingButton.onclick = this.openCardInfoForEdit;
+	      this.addButton.onclick = this.openCardInfoForCreate;
+	    } else {
+	      this.cardPanel.addEventListener('mousedown', this.saveXY);
+	      document.addEventListener('mouseup', this.clearXY);
+	      this.deleteButton.addEventListener('click', this.deleteCard);
+	      this.settingButton.addEventListener('click', this.openCardInfoForEdit);
+	      this.addButton.addEventListener('click', this.openCardInfoForCreate);
+	    }
+  }
 
+  updateCanvasSize() {
+//	  if (this.cardPanel.style.top.replace("px", "") 
+  }
+  
   openCardInfoForCreate(event) {
+	  event.stopPropagation();
       let x = event.pageX;
       let y = event.pageY;
       
       let newPerson = new PersonBean(null, this.person.id, "", this.person.secondName, "", "", "", "", x + 15, y);     
-      let cardInfo = new InfoCard(newPerson, x, y, function (id, parentId, name, secondName, patronymic, age, email, address) {
-    	  let json = JSON.stringify({id: id, parentId: parentId, firstName: name, secondName: secondName,
-          							 patronymic: patronymic, age: age, email: email, address: address});
-    	  RequestMappingUtils.Post('api/create', json);		
+      let cardInfo = new InfoCard(newPerson, x, y, function (person) {
+    	  let json = JSON.stringify(person);
+    	  RequestMappingUtils.PostWithResponse('api/create', json, function(id){
+    		 person.id = String(id);
+    		 window.parent.addPerson(person);
+    	  });		
       });	  					 
     }
   
   openCardInfoForEdit(event) {
+	  event.stopPropagation();
       let x = event.pageX;
       let y = event.pageY;
       
-      let cardInfo = new InfoCard(this.person, x, y, function (id, parentId, name, secondName, patronymic, age, email, address){
-    	  let json = JSON.stringify({id: id, parentId: parentId, firstName: name, secondName: secondName,
-				 patronymic: patronymic, age: age, email: email, address: address});
+      let oldPerson = this.person;
+      let init = this.init;
+      
+      let cardInfo = new InfoCard(this.person, x, y, function (person){
+    	  let json = JSON.stringify(person);
     	  RequestMappingUtils.Post('api/update', json);	
+    	  
+    	  oldPerson.name = person.firstName;
+    	  oldPerson.secondName = person.secondName;
+    	  oldPerson.patronymic = person.patronymic;
+    	  oldPerson.age = person.age;
+    	  oldPerson.email = person.email;
+    	  oldPerson.address = person.address;
+    	  
+    	  init();
       });    		  					 
   }
   
   updateCardPosition() {
-	  let json = JSON.stringify({id: this.person.id, posX: this.cardPanel.style.left.replace("px", ""), 
-		  						 posY: this.cardPanel.style.top.replace("px", "")});
+	  let json = JSON.stringify({id: this.person.id, posX: this.person.posX, posY: this.person.posY});
 	  RequestMappingUtils.Post('/api/savePositions', json);	
   }
   
@@ -93,6 +130,7 @@ class PersonCard {
   }
   
   movePersonCard(event) {
+	  event.stopPropagation();
       var  x = event.pageX;
       var  y = event.pageY;
 
@@ -100,10 +138,21 @@ class PersonCard {
       let new_y = this.delta_y + y;
       this.cardPanel.style.top = new_y + 'px';
       this.cardPanel.style.left = new_x + 'px';
+
+      
+//	  let desktopPanelWidth = this.desktopPanel.style.left.replace("px", ""); 
+//	  let desktopPanelHeight = this.desktopPanel.style.top.replace("px", ""); 
+//	  
+//	  let new
+//	  
+//      if (parseInt(this.person.posX) > parseInt(desktopPanelWidth)) {
+//    	  this.desktopPanel.style.left = this.person.posX 'px';
+//      }
       this.drawConnectFunc();
     }
   
   saveXY(event) {
+	  event.stopPropagation();
       this.isActive = true;
 
       var x = event.pageX;
@@ -123,6 +172,13 @@ class PersonCard {
     }
   
   clearXY() {
+	  event.stopPropagation();
+	  this.person.posX = this.cardPanel.style.left.replace("px", ""); 
+	  this.person.posY = this.cardPanel.style.top.replace("px", ""); 
+	  
+	  
+
+	  
       if (this.ie) {
         document.onmousemove = null;
       } else {
@@ -132,22 +188,6 @@ class PersonCard {
     	this.updateCardPosition();
       }
       this.isActive = false;
-  }
-  
-  initListener() {
-    if (this.ie) {
-      this.cardPanel.onmousedown = this.saveXY;
-      document.onmouseup = this.clearXY;
-      this.deleteButton.onclick = this.deleteCard;
-      this.settingButton.onclick = this.openCardInfoForEdit;
-      this.addButton.onclick = this.openCardInfoForCreate;
-    } else {
-      this.cardPanel.addEventListener('mousedown', this.saveXY);
-      document.addEventListener('mouseup', this.clearXY);
-      this.deleteButton.addEventListener('click', this.deleteCard);
-      this.settingButton.addEventListener('click', this.openCardInfoForEdit);
-      this.addButton.addEventListener('click', this.openCardInfoForCreate);
-    }
   }
   
   getPerson() {

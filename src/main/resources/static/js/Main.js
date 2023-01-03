@@ -2,8 +2,10 @@
 
 var getPeopleUrl = "/api/people";
 getPeople();
-var map = new Map();
+var peopleMap = new Map();
 
+
+var desktop = new Desktop();
 
 function initPeopleMap(people) {
 
@@ -11,88 +13,58 @@ function initPeopleMap(people) {
 	let person = new PersonBean(entry.id, entry.parentId, entry.firstName, entry.secondName,
 		      entry.patronymic, entry.age, entry.email, entry.address, entry.posX,
 		      entry.posY);
-    map.set(entry.id, new PersonCard(person, redrawConnections));
+	peopleMap.set(entry.id, new PersonCard(person,  desktop.getDesktopPanel(), redrawConnections));
   });
  
   redrawConnections();
 }
 
-
-//function drawConnections() {
-//  var canvas;
-//  if (document.getElementById('canvas')) {
-//    canvas = document.getElementById('canvas');
-//  } else {
-//    canvas = document.createElement('canvas');
-//    canvas.classList.add('canvas');
-//    canvas.id = 'canvas';
-//    canvas.width = window.innerWidth;
-//    canvas.height = window.innerHeight;
-//    // canvas.classList.add('noselect');
-//  }
-//
-//  let ctx = canvas.getContext('2d');
-//  ctx.clearRect(0, 0, canvas.width, canvas.height);
-//  ctx.fill();
-//
-//  isStart = true;
-//  ctx.beginPath();
-//
-//
-//  map.forEach((value, key) => {
-//    let x = value.getX() + value.getWidth() / 2;
-//    let y = value.getY() + value.getHeight() / 2;
-//    if (isStart) {
-//      ctx.moveTo(x, y);
-//      isStart = false;
-//    } else {
-//      ctx.lineTo(x, y);
-//    }
-//  });
-//
-//  ctx.strokeStyle = "red";
-//  ctx.lineWidth = "0.2";
-//  ctx.stroke();
-//
-//  document.body.appendChild(canvas);
-//}
+window.addPerson = function(person) {
+	peopleMap.set(person.id, new PersonCard(person, redrawConnections));
+}
 
 function redrawConnections() {
+  var ctx;
   var canvas;
   if (document.getElementById('canvas')) {
     canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
   } else {
     canvas = document.createElement('canvas');
     canvas.classList.add('canvas');
     canvas.id = 'canvas';
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    ctx = canvas.getContext('2d');
+ //   ctx.translate(canvas.width / 2, canvas.height / 2);
     // canvas.classList.add('noselect');
   }
 
-
-  let ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+   
+  ctx.clearRect(0  , 0 , canvas.width, canvas.height);
   ctx.fill();
+  
+ 
+ // ctx.fillRect(0,0,50,50);
 
   isStart = true;
   ctx.beginPath();
 
   let userId = "1";
-  let rootPerson = map.get(userId);
+  let rootPerson = peopleMap.get(userId);
   let x = rootPerson.getX() + rootPerson.getWidth() / 2;
   let y = rootPerson.getY() + rootPerson.getHeight() / 2;
-  connectToChildNode(rootPerson.getId(), x, y, ctx);
+  connectToChildNode(rootPerson.getId(), x , y , ctx);
 
   ctx.strokeStyle = "red";
   ctx.lineWidth = "0.2";
   ctx.stroke();
 
-  document.body.appendChild(canvas);
+  desktop.getDesktopPanel().appendChild(canvas);
 }
 
 function connectToChildNode(id, start_x, start_y, context) {
-  map.forEach((value, key) => {
+	peopleMap.forEach((value, key) => {
       let x;
       let y;
       if (id === value.getParentId()) {
@@ -100,7 +72,7 @@ function connectToChildNode(id, start_x, start_y, context) {
         y = value.getY() + value.getHeight() / 2;
         context.moveTo(start_x, start_y);
         context.lineTo(x, y);{
-        connectToChildNode(value.id, x, y);
+        connectToChildNode(value.getId(), x, y, context);
       }
     }
   });

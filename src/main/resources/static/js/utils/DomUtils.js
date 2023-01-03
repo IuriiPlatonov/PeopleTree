@@ -1,11 +1,33 @@
 class DomUtils {
     constructor() {
     }
+    
+    static addInput(parent, elementClass, id, value) {
+  	  	let input = DomUtils.addDiv(parent, 'input');
+  	  	input.id = id;
+  	  	input.value = value;
+	 	parent.appendChild(input);
+	 	return input;
+    }
+    
+    static addLabel(parent, id, value) {
+  	  	let label = document.createElement('label');
+  	  	label.htmlFor = id;
+  	  	label.innerHTML = value;
+  	  	parent.appendChild(label);
+   	  	return label;
+    }
+    
+    static addSpan(parent, elementClass, text) {
+    	let span = DomUtils.createElementWithClassAndInnerText('span', elementClass, text);
+   	  	parent.appendChild(span);
+   	  	return span;
+    }
 
     static addDiv(parent, elementClass) {
-    	 let div = DomUtils.createDiv(elementClass);
-    	 parent.appendChild(div);
-    	 return div;
+    	let div = DomUtils.createDiv(elementClass);
+    	parent.appendChild(div);
+    	return div;
     }
     
     static addDivWithText(parent, elementClass, text) {

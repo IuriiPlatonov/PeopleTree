@@ -29,6 +29,6 @@ public class PersonDtoMapper {
 	public Person toEntity(PersonDto dto) {
 		return Person.builder().id(dto.getId()).firstName(dto.getFirstName()).secondName(dto.getSecondName())
 				.patronymic(dto.getPatronymic()).email(dto.getEmail()).age(dto.getAge()).address(dto.getAddress())
-				.posX(dto.getPosX()).posY(dto.getPosY()).build();
+				.posX(dto.getPosX()).posY(dto.getPosY()).parentId(dto.getParentId()).build();
 	}
 }

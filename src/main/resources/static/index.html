@@ -1,23 +1,47 @@
 <!doctype html>
 <html lang="ru">
+
 <head>
   <meta charset="utf-8" />
   <title></title>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
   <link rel="stylesheet" href="css/Desktop.css" />
   <link rel="stylesheet" href="css/InfoDialog.css" />
   <link rel="stylesheet" href="css/InfoCard.css" />
- 
+<link rel="stylesheet" href="css/main.css" />
 </head>
+
 <body>
-  <script src="js/utils/DomUtils.js"></script>
+<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> css3d - periodic table.</div>
+		<div id="container"></div>
+		<div id="menu">
+			<button id="table">TABLE</button>
+			<button id="sphere">SPHERE</button>
+			<button id="helix">HELIX</button>
+			<button id="grid">GRID</button>
+		</div>
+
+  <script type="importmap">
+			{
+				"imports": {
+					"three": "/js/three/three.module.js",
+					"three/addons/": "/js/three/jsm/"
+				}
+			}
+	</script>
+
+<!--   <script type="importmap" src="js/importMap.json"></script> -->
+  <script type="module" src="js/main3d.js"></script>
+  <!-- <script src="js/utils/DomUtils.js"></script>
   <script src="js/utils/RequestMappingUtils.js"></script>
+  <script src="js/Desktop.js"></script>
   <script src="js/bean/PersonBean.js"></script>
   <script src="js/enum/DialogType.js"></script>
   <script src="js/enum/InfoCardType.js"></script>
   <script src="js/InfoDiaolg.js"></script> 
   <script src="js/InfoCard.js"></script> 
   <script src="js/PersonCard.js"></script>
-  <script src="js/Main.js"></script>
+  <script src="js/Main.js"></script> -->
 
 </body>
 

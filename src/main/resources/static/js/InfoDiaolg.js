@@ -4,153 +4,102 @@ class InfoDialog {
 		this.message = message;
 		this.type = type;
 		this.callback = callback;
+		
+		this.isActive = false;
+		this.delta_x = 0;
+		this.delta_y = 0;
+		
+		this.ie = 0;
+		if (navigator.userAgent.indexOf("MSIE") != -1) this.ie = 1;
+		
 		if (type.getName() === 'ok') {
 			this.createOkDialog();
 		}
 		if (type.getName() === 'okno') {
 			this.createOkNoDialog();
 		}
+		this.bind();
 		this.initListener();
+	}
+	
+	bind() {
+		this.saveXY = this.saveXY.bind(this);
+		this.clearXY = this.clearXY.bind(this);
+		this.moveBlock = this.moveBlock.bind(this);
+		this.ok = this.ok.bind(this);
+		this.no = this.no.bind(this);
 	}
 
 	createOkDialog() {
-		this.dialog = document.createElement('div');
-		this.dialog.classList.add('infoDialog');
-		this.dialog.innerHTML = '<span>' + this.message + ' Ok button </span>';
-		document.body.appendChild(this.dialog);
+		this.dialog = DomUtils.addDivWithText(document.body, 'infoDialog', '<span>' + this.message + ' Ok button </span>');
 	}
 
 	createOkNoDialog() {
-		this.backgroung = document.createElement('div');
-		this.backgroung.classList.add('infoDialogBackground');
-		
-		this.dialog = document.createElement('div');
-		this.dialog.classList.add('infoDialog');
-		this.dialog.classList.add('noselect');
+		this.backgroung = DomUtils.addDiv(document.body, 'infoDialogBackground')
+		this.dialog = DomUtils.addDivWithClasses(this.backgroung, ['infoDialog', 'noselect']);
+		DomUtils.addSpan(this.dialog, 'infoDialogMessage', this.message);
 
-		let message = document.createElement('span');
-		message.classList.add('infoDialogMessage');
-		message.innerHTML = this.message;
-
-		this.okButton = document.createElement('div');
-		this.okButton.classList.add('infoDialogButton');
-		this.okButton.innerHTML = '<span class="infoDialogButtonText">Да</span>';
-		
-		this.noButton = document.createElement('div');
-		this.noButton.classList.add('infoDialogButton');
-		this.noButton.innerHTML = '<span class="infoDialogButtonText">Нет</span>';
-		
-		this.dialog.appendChild(message);
-		this.dialog.appendChild(this.noButton);
-		this.dialog.appendChild(this.okButton);
-		
-		this.backgroung.appendChild(this.dialog);
-		
-		document.body.appendChild(this.backgroung);
+		this.noButton = DomUtils.addDivWithText(this.dialog, 'infoDialogButton', '<span class="infoDialogButtonText">Нет</span>');
+		this.okButton = DomUtils.addDivWithText(this.dialog, 'infoDialogButton', '<span class="infoDialogButtonText">Да</span>');
 	}
 
+	saveXY(event) {
+		this.isActive = true;
+		var x = event.pageX;
+		var y = event.pageY;
+
+		let x_block = this.dialog.offsetLeft;
+		let y_block = this.dialog.offsetTop;
+
+		this.delta_x = x_block - x;
+		this.delta_y = y_block - y;
+
+		if (this.ie) {
+			document.onmousemove = this.moveBlock;
+		} else {
+			document.addEventListener("mousemove", this.moveBlock, false);
+		}
+	}
+	
+	clearXY() {
+		if (this.ie) {
+			document.onmousemove = null;
+		} else {
+			document.removeEventListener("mousemove", this.moveBlock, false);
+		}
+	}
+	
+	moveBlock(event) {
+		var	x = event.pageX;
+		var	y = event.pageY;
+
+		let new_x = this.delta_x + x;
+		let new_y = this.delta_y + y;
+		this.dialog.style.top = new_y + 'px';
+		this.dialog.style.left = new_x + 'px';
+	}
+
+	ok() {
+		this.callback();
+		document.body.removeChild(this.backgroung);
+	}
+
+	no() {
+		document.body.removeChild(this.backgroung);
+	}
+	
 	initListener() {
-		let backgroung = this.backgroung;
-		let dialog = this.dialog;
-		let noButton = this.noButton;
-		let okButton = this.okButton;
-		
-		let type = this.type;
-		
-		let callback = this.callback;
-		let isActive = false;
-		let delta_x = 0;
-		let delta_y = 0;
-		let ie = 0;
-		let browser = navigator.userAgent;
-
-		if (browser.indexOf("MSIE") != -1) ie = 1;
-
-		if (ie) {
-			dialog.onmousedown = saveXY;
-			document.onmouseup = clearXY;
-			okButton.onclick = ok;
-			if (type.getName() === 'okno') noButton.onclick = no;
+		if (this.ie) {
+			this.dialog.onmousedown = this.saveXY;
+			document.onmouseup = this.clearXY;
+			this.okButton.onclick = this.ok;
+			if (this.type.getName() === 'okno') this.noButton.onclick = this.no;
 			
 		} else {
-			dialog.addEventListener('mousedown', saveXY);
-			document.addEventListener('mouseup', clearXY);
-			okButton.addEventListener('click', ok);
-			if (type.getName() === 'okno') noButton.addEventListener('click', no);
-		}
-
-		/* Получаем текущие координаты курсора */
-		function saveXY(obj_event) {
-			var x = 0;
-			var y = 0;
-
-			isActive = true;
-
-			if (obj_event) {
-				x = obj_event.pageX;
-				y = obj_event.pageY;
-			}
-
-			else {
-				x = window.event.clientX;
-				y = window.event.clientY;
-				if (ie) {
-					y -= 2;
-					x -= 2;
-				}
-			}
-			/* Узнаём текущие координаты блока */
-			let x_block = dialog.offsetLeft;
-			let y_block = dialog.offsetTop;
-			/* Узнаём смещение */
-			delta_x = x_block - x;
-			delta_y = y_block - y;
-
-			if (ie) {
-				document.onmousemove = moveBlock;
-			} else {
-				document.addEventListener("mousemove", moveBlock, false);
-			}
-		}
-
-		function clearXY() {
-			if (ie) {
-				document.onmousemove = null;
-			} else {
-				document.removeEventListener("mousemove", moveBlock, false);
-			}
-		}
-
-		/* Получаем новые координаты курсора мыши */
-		function moveBlock(event) {
-			var x = 0;
-			var y = 0;
-			if (event) {
-				x = event.pageX;
-				y = event.pageY;
-			}
-			else {
-				x = window.event.clientX;
-				y = window.event.clientY;
-				if (ie) {
-					y -= 2;
-					x -= 2;
-				}
-			}
-			/* Вычисляем новые координаты блока */
-			let new_x = delta_x + x;
-			let new_y = delta_y + y;
-			dialog.style.top = new_y + 'px';
-			dialog.style.left = new_x + 'px';
-		}
-
-		function ok() {
-			callback();
-			document.body.removeChild(backgroung);
-		}
-
-		function no() {
-			document.body.removeChild(backgroung);
+			this.dialog.addEventListener('mousedown', this.saveXY);
+			document.addEventListener('mouseup', this.clearXY);
+			this.okButton.addEventListener('click', this.ok);
+			if (this.type.getName() === 'okno') this.noButton.addEventListener('click', this.no);
 		}
 	}
 }

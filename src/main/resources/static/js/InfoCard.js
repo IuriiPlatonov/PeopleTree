@@ -1,42 +1,27 @@
 class InfoCard {
 
-//  constructor(id, parentId, name, secondName, patronymic, age, email, address, x, y, callback) {
-//	  this.callback = callback;
-//	  this.parentId = parentId;
-//	  this.id = id; 
-//	  this.name = name; 
-//	  this.secondName = secondName; 
-//	  this.patronymic = patronymic;
-//	  this.age = age; 
-//	  this.email = email; 
-//	  this.address =address;
-//	  this.x = x;
-//	  this.y = y;
-//	  this.initCardInfo();
-//	  this.initListener();
-//  }
-  
   constructor(person, x, y, callback) {
 	  this.x = x;
 	  this.y = y;
 	  this.callback = callback;
 	  this.person = person;
+	  
+	  this.ie = 0;
+	  if (navigator.userAgent.indexOf("MSIE") != -1) this.ie = 1;
+	  
 	  this.initCardInfo();
 	  this.initListener();
   }
   
   initCardInfo() {
 	  
-	  this.backgroung = document.createElement('div');
-	  this.backgroung.classList.add('infoCardBackground');
+	  this.backgroung = DomUtils.addDiv(document.body, 'infoCardBackground');	
 	  
-	  let cardInfoPanel = document.createElement('div');
-	  cardInfoPanel.classList.add('infoCardPanel');
-	  cardInfoPanel.classList.add('noselect');
+	  let cardInfoPanel = DomUtils.addDivWithClasses(this.backgroung, ['infoCardPanel', 'noselect']);
 	  cardInfoPanel.style.left = this.x + 'px';
 	  cardInfoPanel.style.top = this.y + 'px';
 	  
-	  this.namePanel = this.createField(this.person.name, "infoCardName", 'Имя');
+	  this.namePanel = this.createField(this.person.firstName, "infoCardName", 'Имя');
 	  this.secondNamePanel = this.createField(this.person.secondName, "infoCardSecondName", 'Фамилия');
 	  this.patronymicPanel = this.createField(this.person.patronymic, "infoCardPatronymic", 'Отчество');
 	  this.agePanel = this.createField(this.person.age, "infoCardAge", 'Возраст');
@@ -67,8 +52,6 @@ class InfoCard {
 	  cardInfoPanel.appendChild(buttonPanel);
 	  
 	  this.backgroung.appendChild(cardInfoPanel);
-	  
-	  document.body.appendChild(this.backgroung);
   }
   
   createField(value, id, label)
@@ -96,7 +79,7 @@ class InfoCard {
 		let noButton = this.noButton;
 		let okButton = this.okButton;
 		let callback = this.callback;
-		
+		let person = this.person;
 		let name = this.namePanel.childNodes[1];
 		let secondName = this.secondNamePanel.childNodes[1];
 		let patronymic = this.patronymicPanel.childNodes[1];
@@ -104,27 +87,28 @@ class InfoCard {
 		let email = this.emailPanel.childNodes[1];
 		let address = this.addressPanel.childNodes[1];
 		
-		let id = this.person.id;
-		
+		let id = this.person.id;		
 		let parentId = this.person.parentId;
-		let ie = 0;
-		let browser = navigator.userAgent;
-
-		if (browser.indexOf("MSIE") != -1) ie = 1;
-
-		if (ie) {
-
+		
+		if (this.ie) {
 			okButton.onclick = ok;
-			noButton.onclick = no;
-			
+			noButton.onclick = no;			
 		} else {
-
 			okButton.addEventListener('click', ok);
 			noButton.addEventListener('click', no);
 		}
 
 		function ok() {
-			callback(id, parentId, name.value, secondName.value, patronymic.value, age.value, email.value, address.value);
+			person.id = id;
+			person.parentId = parentId;
+			person.firstName = name.value;
+			person.secondName = secondName.value;
+			person.patronymic = patronymic.value;
+			person.age = age.value;
+			person.email = email.value;
+			person.address = address.value;
+			
+			callback(person);
 			document.body.removeChild(backgroung);
 		}
 

@@ -7,15 +7,13 @@ import com.people.dto.PositionDto;
 
 public interface PeopleService {
 
-	void savePerson(PersonDto person);
+    void updateCardPosition(PositionDto position);
 
-	void updatePerson(PersonDto person);
+    List<PersonDto> getPeople(String userId);
 
-	void updateCardPosition(PositionDto position);
-	
-	List<PersonDto> getPeople();
+    void delete(PersonDto person);
 
-	void delete(PersonDto person);
+    void update(PersonDto person);
 
-	void update(PersonDto person);
+    String create(PersonDto person);
 }

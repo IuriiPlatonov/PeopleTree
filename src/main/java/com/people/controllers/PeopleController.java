@@ -24,7 +24,7 @@ public class PeopleController {
 	
 	@GetMapping("people")
 	public ResponseEntity<List<PersonDto>> getPeople() {
-		return ResponseEntity.ok(peopleService.getPeople());
+		return ResponseEntity.ok(peopleService.getPeople("1"));
 	}
 	
 	@PostMapping("savePositions")
@@ -47,9 +47,7 @@ public class PeopleController {
 	}
 	
 	@PostMapping("create")
-	public ResponseEntity<Void> create(@RequestBody PersonDto person) {
-	//	peopleService.deleteCard(person);
-		System.out.println("создал" + person.getAge() + person.getParentId());
-		return ResponseEntity.ok().body(null);
+	public ResponseEntity<String> create(@RequestBody PersonDto person) {
+		return ResponseEntity.ok(peopleService.create(person));
 	}
 }

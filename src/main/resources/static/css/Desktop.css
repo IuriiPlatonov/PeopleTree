@@ -6,6 +6,7 @@
 	width: 200px;
 	height: 100px;
 	background: white;
+
 }
 
 .photoBlock {
@@ -49,6 +50,7 @@
 }
 
 .icon {
+	position: static;
 	cursor: pointer;
 	width: 15px;
 	height: 15px;
@@ -88,6 +90,22 @@
 .canvas {
 	position: absolute;
 	z-index: -1;
-/* 	width: 100%;
-	height: 100%; */
+/* 		width: 500px;
+	height: 500px; */
+}
+
+html, body {
+	overflow: hidden;
+}
+
+.desktopPanel {
+	border: 1px solid #000;
+	z-index: -2;
+	position: absolute;
+
+}
+
+.buttonPanel {
+	z-index: 9999;
+	position: absolute;
 }

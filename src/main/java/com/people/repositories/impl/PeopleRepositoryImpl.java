@@ -20,68 +20,83 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PeopleRepositoryImpl implements PeopleRepository {
 
-	private final NamedParameterJdbcOperations namedParameterJdbcOperations;
+    private final NamedParameterJdbcOperations namedParameterJdbcOperations;
 
-	@Value("#{sqlReader.getStatement('sqls/people.sql')}")
-	private String people;
-	@Value("#{sqlReader.getStatement('sqls/update/personPosition.sql')}")
-	private String updatePersonPosition;
-	@Value("#{sqlReader.getStatement('sqls/delete/person.sql')}")
-	private String deletePerson;
-	@Value("#{sqlReader.getStatement('sqls/create/person.sql')}")
-	private String updatePerson;
+    @Value("#{sqlReader.getStatement('sqls/people.sql')}")
+    private String people;
+    @Value("#{sqlReader.getStatement('sqls/update/personPosition.sql')}")
+    private String updatePersonPosition;
+    @Value("#{sqlReader.getStatement('sqls/delete/person.sql')}")
+    private String deletePerson;
+    @Value("#{sqlReader.getStatement('sqls/update/person.sql')}")
+    private String updatePerson;
+    @Value("#{sqlReader.getStatement('sqls/create/person.sql')}")
+    private String createPerson;
 
-	@Override
-	public void create(Person object) {
+    @Override
+    public void create(Person object) {
+	String sql = createPerson;
+	Map<String, Object> params = new HashMap<>();
+	params.put("id", new BigDecimal(object.getId()));
+	params.put("p_p_id", new BigDecimal(object.getParentId()));
+	params.put("pos_x", new BigDecimal(object.getPosX()));
+	params.put("pos_y", new BigDecimal(object.getPosY()));
+	params.put("first_name", object.getFirstName());
+	params.put("second_name", object.getSecondName());
+	params.put("patronymic", object.getPatronymic());
+	params.put("email", object.getEmail());
+	params.put("age", StringUtils.isBlank(object.getAge()) ? null : new BigDecimal(object.getAge()));
+	params.put("address", object.getAddress());
 
-	}
+	namedParameterJdbcOperations.update(sql, params);
+    }
 
-	@Override
-	public void update(Person object) {
-		String sql = updatePerson;
-		Map<String, Object> params = new HashMap<>();
-		params.put("id", new BigDecimal(object.getId()));
-		params.put("first_name", object.getFirstName());
-		params.put("second_name", object.getSecondName());
-		params.put("patronymic", object.getPatronymic());
-		params.put("email", object.getEmail());
-		params.put("age", StringUtils.isBlank(object.getAge()) ? null : new BigDecimal(object.getAge()));
-		params.put("address", object.getAddress());
+    @Override
+    public void update(Person object) {
+	String sql = updatePerson;
+	Map<String, Object> params = new HashMap<>();
+	params.put("id", new BigDecimal(object.getId()));
+	params.put("first_name", object.getFirstName());
+	params.put("second_name", object.getSecondName());
+	params.put("patronymic", object.getPatronymic());
+	params.put("email", object.getEmail());
+	params.put("age", StringUtils.isBlank(object.getAge()) ? null : new BigDecimal(object.getAge()));
+	params.put("address", object.getAddress());
 
-		namedParameterJdbcOperations.update(sql, params);
-	}
+	namedParameterJdbcOperations.update(sql, params);
+    }
 
-	@Override
-	public void delete(Person object) {
-		String sql = deletePerson;
-		Map<String, Object> params = new HashMap<>();
-		params.put("id", new BigDecimal(object.getId()));
+    @Override
+    public void delete(Person object) {
+	String sql = deletePerson;
+	Map<String, Object> params = new HashMap<>();
+	params.put("id", new BigDecimal(object.getId()));
 
-		namedParameterJdbcOperations.update(sql, params);
-	}
+	namedParameterJdbcOperations.update(sql, params);
+    }
 
-	@Override
-	public List<Person> getAll() {
-		String sql = people;
-		Map<String, Object> params = new HashMap<>();
+    @Override
+    public List<Person> getPeopleTree(String id) {
+	String sql = people;
+	Map<String, Object> params = new HashMap<>();
+	params.put("id", new BigDecimal(id));
+	return namedParameterJdbcOperations.query(sql, params, new PersonMapper());
+    }
 
-		return namedParameterJdbcOperations.query(sql, params, new PersonMapper());
-	}
+    @Override
+    public Person getById(String id) {
+	return null;
+    }
 
-	@Override
-	public Person getById(String id) {
-		return null;
-	}
+    @Override
+    public void updatePosition(String id, String posX, String posY) {
+	String sql = updatePersonPosition;
+	Map<String, Object> params = new HashMap<>();
+	params.put("id", new BigDecimal(id));
+	params.put("pos_x", new BigDecimal(posX));
+	params.put("pos_y", new BigDecimal(posY));
 
-	@Override
-	public void updatePosition(String id, String posX, String posY) {
-		String sql = updatePersonPosition;
-		Map<String, Object> params = new HashMap<>();
-		params.put("id", new BigDecimal(id));
-		params.put("pos_x", new BigDecimal(posX));
-		params.put("pos_y", new BigDecimal(posY));
-
-		namedParameterJdbcOperations.update(sql, params);
-	}
+	namedParameterJdbcOperations.update(sql, params);
+    }
 
 }
