@@ -8,30 +8,33 @@
   <link rel="stylesheet" href="css/Desktop.css" />
   <link rel="stylesheet" href="css/InfoDialog.css" />
   <link rel="stylesheet" href="css/InfoCard.css" />
-<link rel="stylesheet" href="css/main.css" />
+<!-- <link rel="stylesheet" href="css/main.css" /> -->
 </head>
 
 <body>
-<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> css3d - periodic table.</div>
-		<div id="container"></div>
-		<div id="menu">
+<div >тут стоит батут</div>
+<!-- 		<div id="container"></div> -->
+<!-- 		<div id="menu">
 			<button id="table">TABLE</button>
 			<button id="sphere">SPHERE</button>
 			<button id="helix">HELIX</button>
 			<button id="grid">GRID</button>
-		</div>
+		</div> -->
 
   <script type="importmap">
 			{
 				"imports": {
 					"three": "/js/three/three.module.js",
-					"three/addons/": "/js/three/jsm/"
+					"three/addons/": "/js/three/jsm/",
+          			"beans": "/js/beans/Beans.js",
+          			"objects": "/js/objects/Objects.js"
 				}
 			}
 	</script>
 
 <!--   <script type="importmap" src="js/importMap.json"></script> -->
-  <script type="module" src="js/main3d.js"></script>
+  <script type="module" src="js/main.js"></script>
+  <script src="js/utils/RequestMappingUtils.js"></script>
   <!-- <script src="js/utils/DomUtils.js"></script>
   <script src="js/utils/RequestMappingUtils.js"></script>
   <script src="js/Desktop.js"></script>

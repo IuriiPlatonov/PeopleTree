@@ -12,3 +12,5 @@ class PersonBean {
         this.posY = y;
     }
 }
+
+export { PersonBean };
