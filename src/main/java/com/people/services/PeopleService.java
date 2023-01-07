@@ -15,5 +15,5 @@ public interface PeopleService {
 
     void update(PersonDto person);
 
-    String create(PersonDto person);
+    PersonDto create(PersonDto person);
 }

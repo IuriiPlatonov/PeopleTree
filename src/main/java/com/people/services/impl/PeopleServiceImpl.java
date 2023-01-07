@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import com.people.dto.PersonDto;
 import com.people.dto.PositionDto;
 import com.people.dto.mapper.PersonDtoMapper;
-import com.people.model.Person;
 import com.people.repositories.PeopleRepository;
 import com.people.services.PeopleService;
 
@@ -44,11 +43,11 @@ public class PeopleServiceImpl implements PeopleService {
     }
 
     @Override
-    public String create(PersonDto person) {
+    public PersonDto create(PersonDto person) {
 	String id = new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16).toString();
 	person.setId(id);
 	peopleRepository.create(personDtoMapper.toEntity(person));
-	return id;
+	return person;
     }
 
 }

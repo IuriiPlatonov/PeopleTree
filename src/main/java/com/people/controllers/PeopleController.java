@@ -35,8 +35,7 @@ public class PeopleController {
 	
 	@PostMapping("delete")
 	public ResponseEntity<Void> delete(@RequestBody PersonDto person) {
-	//	peopleService.deleteCard(person);
-		System.out.println("Удалил");
+		peopleService.delete(person);
 		return ResponseEntity.ok().body(null);
 	}
 	
@@ -47,7 +46,7 @@ public class PeopleController {
 	}
 	
 	@PostMapping("create")
-	public ResponseEntity<String> create(@RequestBody PersonDto person) {
+	public ResponseEntity<PersonDto> create(@RequestBody PersonDto person) {
 		return ResponseEntity.ok(peopleService.create(person));
 	}
 }

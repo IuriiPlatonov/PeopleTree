@@ -1,5 +1,5 @@
 class DialogType {
-  // Create new instances of the same class as static attributes
+ 
   static Ok = new DialogType("ok")
   static OkNo = new DialogType("okno")
 
@@ -11,3 +11,5 @@ class DialogType {
     return this.name;
   }
 }
+
+export { DialogType };
