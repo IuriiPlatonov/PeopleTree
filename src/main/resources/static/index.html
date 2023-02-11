@@ -2,25 +2,19 @@
 <html lang="ru">
 
 <head>
+
 <meta charset="utf-8" />
 <title></title>
-<meta name="viewport"
-	content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<link rel="stylesheet" href="css/Objects.css" />
-<link rel="stylesheet" href="css/Dialogs.css" />
+<!-- <meta name="viewport"
+	content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"> -->
+
+<link rel="stylesheet" href="css/darkTheme/Objects.css" />
+<link rel="stylesheet" href="css/darkTheme/Dialogs.css" />
+<link rel="stylesheet" href="css/darkTheme/Menu.css" />
 
 </head>
 
 <body>
-	<div>тут стоит батут</div>
-	<!-- 		<div id="container"></div> -->
-	<!-- 		<div id="menu">
-			<button id="table">TABLE</button>
-			<button id="sphere">SPHERE</button>
-			<button id="helix">HELIX</button>
-			<button id="grid">GRID</button>
-		</div> -->
-
 	<script type="importmap">
 			{
 				"imports": {
@@ -29,13 +23,16 @@
           			"beans": "/js/beans/Beans.js",
           			"objects": "/js/objects/Objects.js",
 					"dialogs": "/js/dialogs/Dialogs.js",
-					"enum": "/js/enum/Enum.js"
+					"enum": "/js/enum/Enum.js",
+					"menu": "/js/blocks/Menu.js",
+					"utils/": "/js/utils/"
 				}
 			}
 	</script>
 
 	<script type="module" src="js/Main.js"></script>
 	<script src="js/utils/RequestMappingUtils.js"></script>
+	<script src="js/constants/Constants.js"></script>
 
 
 </body>

@@ -1,9 +1,13 @@
 package com.people.services;
 
 import java.util.List;
+import java.util.Map;
 
+import com.people.dto.DefaultBean;
 import com.people.dto.PersonDto;
 import com.people.dto.PositionDto;
+import com.people.dto.SettingsDto;
+import com.people.dto.response.DeleteParentResponse;
 
 public interface PeopleService {
 
@@ -11,9 +15,15 @@ public interface PeopleService {
 
     List<PersonDto> getPeople(String userId);
 
-    void delete(PersonDto person);
+    List<PersonDto> delete(PersonDto person);
 
     void update(PersonDto person);
 
     PersonDto create(PersonDto person);
+
+    SettingsDto getSettings(String userId);
+
+    DefaultBean getChildrenCount(String personId);
+
+    DeleteParentResponse deleteParent(PersonDto person);
 }

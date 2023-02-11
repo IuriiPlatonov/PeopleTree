@@ -13,4 +13,16 @@ class PersonBean {
     }
 }
 
-export { PersonBean };
+class AuthBean {
+    constructor(id, parentId, caption, value, x, y, authType) {
+        this.id = id;
+        this.parentId = parentId;
+        this.caption = caption;
+        this.value = value;
+        this.posX = x;
+        this.posY = y;
+        this.authType = authType;
+    }
+}
+
+export { PersonBean, AuthBean };

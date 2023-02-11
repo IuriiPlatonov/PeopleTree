@@ -1,0 +1,1 @@
+select * from settings where s_id = :id

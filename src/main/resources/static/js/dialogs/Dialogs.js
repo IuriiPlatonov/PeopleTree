@@ -1,10 +1,10 @@
 class InfoDialog {
 
-	constructor(message, type, callback) {
+	constructor(message, type, okCallback, cancelCallback) {
 		this.message = message;
 		this.type = type;
-		this.callback = callback;
-
+		this.okCallback = okCallback;
+		this.cancelCallback = cancelCallback;
 		this.isActive = false;
 		this.delta_x = 0;
 		this.delta_y = 0;
@@ -14,6 +14,9 @@ class InfoDialog {
 		}
 		if (type.getName() === 'okno') {
 			this.createOkNoDialog();
+		}
+		if (type.getName() === 'oknocancel') {
+			this.createOkNoCancelDialog();
 		}
 		this.bind();
 		this.initListener();
@@ -25,6 +28,7 @@ class InfoDialog {
 		this.moveBlock = this.moveBlock.bind(this);
 		this.ok = this.ok.bind(this);
 		this.no = this.no.bind(this);
+		this.cancel = this.cancel.bind(this);
 	}
 
 	createOkDialog() {
@@ -52,15 +56,79 @@ class InfoDialog {
 
 		this.noButton = document.createElement('div');
 		this.noButton.classList.add('infoDialogButton');
-		this.noButton.innerHTML = '<span class="infoDialogButtonText">Нет</span>';
 		this.dialog.appendChild(this.noButton);
+		
+		this.noButtonText = document.createElement('span');
+		this.noButtonText.classList.add('infoDialogButtonText');
+		this.noButtonText.innerHTML = 'Нет';
+		this.noButton.appendChild(this.noButtonText);
 
 		this.okButton = document.createElement('div');
 		this.okButton.classList.add('infoDialogButton');
-		this.okButton.innerHTML = '<span class="infoDialogButtonText">Да</span>';
 		this.dialog.appendChild(this.okButton);
+		
+		this.okButtonText = document.createElement('span');
+		this.okButtonText.classList.add('infoDialogButtonText');
+		this.okButtonText.innerHTML = 'Да';
+		this.okButton.appendChild(this.okButtonText);
 	}
 
+	createOkNoCancelDialog() {
+		this.backgroung = document.createElement('div');
+		this.backgroung.classList.add('infoDialogBackground');
+		document.body.appendChild(this.backgroung);
+
+
+		this.dialog = document.createElement('div');
+		this.dialog.classList.add('infoDialog');
+		this.dialog.classList.add('noselect');
+		this.backgroung.appendChild(this.dialog);
+
+		let messageBox = document.createElement('span');
+		messageBox.classList.add('infoDialogMessage');
+		messageBox.innerHTML = this.message;
+		this.dialog.appendChild(messageBox);
+
+		this.noButton = document.createElement('div');
+		this.noButton.classList.add('infoDialogButton');
+		this.dialog.appendChild(this.noButton);
+		
+		this.noButtonText = document.createElement('span');
+		this.noButtonText.classList.add('infoDialogButtonText');
+		this.noButtonText.innerHTML = 'Нет';
+		this.noButton.appendChild(this.noButtonText);
+		
+		this.cancelButton = document.createElement('div');
+		this.cancelButton.classList.add('infoDialogButton');
+		this.dialog.appendChild(this.cancelButton);
+		
+		this.cancelButtonText = document.createElement('span');
+		this.cancelButtonText.classList.add('infoDialogButtonText');
+		this.cancelButtonText.innerHTML = 'Отмена';
+		this.cancelButton.appendChild(this.cancelButtonText);
+
+		this.okButton = document.createElement('div');
+		this.okButton.classList.add('infoDialogButton');
+		this.dialog.appendChild(this.okButton);
+		
+		this.okButtonText = document.createElement('span');
+		this.okButtonText.classList.add('infoDialogButtonText');
+		this.okButtonText.innerHTML = 'Да';
+		this.okButton.appendChild(this.okButtonText);
+	}
+
+	setOkButtonText(text) {
+		this.okButtonText.innerHTML = text;
+	}
+	
+	setCancelButtonText(text) {
+		this.cancelButtonText.innerHTML = text;
+	}
+	
+	setNoButtonText(text) {
+		this.noButtonText.innerHTML = text;
+	}
+	
 	saveXY(event) {
 		this.isActive = true;
 		var x = event.pageX;
@@ -91,7 +159,12 @@ class InfoDialog {
 	}
 
 	ok() {
-		this.callback();
+		this.okCallback();
+		document.body.removeChild(this.backgroung);
+	}
+	
+	cancel() {
+		this.cancelCallback();
 		document.body.removeChild(this.backgroung);
 	}
 
@@ -103,7 +176,8 @@ class InfoDialog {
 		this.dialog.addEventListener('mousedown', this.saveXY);
 		document.addEventListener('mouseup', this.clearXY);
 		this.okButton.addEventListener('click', this.ok);
-		if (this.type.getName() === 'okno') this.noButton.addEventListener('click', this.no);
+		if (this.type.getName() === 'okno' || this.type.getName() === 'oknocancel') this.noButton.addEventListener('click', this.no);
+		if (this.type.getName() === 'oknocancel') this.cancelButton.addEventListener('click', this.cancel);
 	}
 }
 

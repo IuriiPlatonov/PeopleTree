@@ -1,0 +1,1 @@
+select * from people where p_p_id = :parentId
