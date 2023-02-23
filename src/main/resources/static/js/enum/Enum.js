@@ -30,6 +30,8 @@ class ThemeType {
 class AuthType {
     static input = new AuthType("input");
     static button = new AuthType("button");
+    static collapsedInput = new AuthType("collapsedInput");
+    static collapsedButton = new AuthType("collapsedButton");
 
     constructor(name) {
         this.name = name

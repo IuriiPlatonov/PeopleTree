@@ -3,10 +3,7 @@ package com.people.services;
 import java.util.List;
 import java.util.Map;
 
-import com.people.dto.DefaultBean;
-import com.people.dto.PersonDto;
-import com.people.dto.PositionDto;
-import com.people.dto.SettingsDto;
+import com.people.dto.*;
 import com.people.dto.response.DeleteParentResponse;
 
 public interface PeopleService {
@@ -26,4 +23,8 @@ public interface PeopleService {
     DefaultBean getChildrenCount(String personId);
 
     DeleteParentResponse deleteParent(PersonDto person);
+
+    WorkspaceDto createWorkspace(WorkspaceDto workspace);
+
+    List<WorkspaceDto> getWorkspacesForUser(String userId);
 }

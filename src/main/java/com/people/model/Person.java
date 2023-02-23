@@ -9,6 +9,7 @@ import lombok.Data;
 @Builder
 public class Person {
 	private String id;
+	private String workspaceId;
 	private String parentId;
 	private String firstName;
 	private String secondName;

@@ -1,2 +1,2 @@
-insert into	people (p_id, first_name, pos_x, pos_y, p_p_id, second_name, patronymic, age, email, address)
-values (:id, :first_name, :pos_x, :pos_y, :p_p_id, :second_name, :patronymic, :age, :email, :address)
+insert into	people (p_id, first_name, pos_x, pos_y, p_p_id, second_name, patronymic, age, email, address, ws_id)
+values (:id, :first_name, :pos_x, :pos_y, :p_p_id, :second_name, :patronymic, :age, :email, :address, :ws_id)

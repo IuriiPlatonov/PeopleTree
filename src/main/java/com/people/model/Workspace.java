@@ -1,5 +1,6 @@
-package com.people.dto.response;
+package com.people.model;
 
+import com.people.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,9 +10,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-
-    private boolean isAuthorized;
+public class Workspace {
+    private String id;
     private String userId;
-
+    private String kindId;
 }

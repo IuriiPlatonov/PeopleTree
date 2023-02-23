@@ -18,7 +18,7 @@ class PersonCard {
         this.bind();
         this.init();
 
-        this.teta = 1290; /*1750*/
+        this.teta = 1320; /*1750 : 1290*/
 
     }
 
@@ -145,7 +145,7 @@ class PersonCard {
         let x = parseInt(this.person.posX);
         let y = parseInt(this.person.posY) - 150;
 
-        let newPerson = new BEAN.PersonBean(null, this.person.id, "",
+        let newPerson = new BEAN.PersonBean(null, this.person.id, this.person.workspaceId, "",
             this.person.secondName, "", "", "", "", x, y);
 
         let cardInfo = new DIALOG.InfoCard(newPerson, function (person) {
@@ -332,7 +332,6 @@ class PersonCard {
 
 
 class AuthCard {
-
     constructor(authBean, camera, eventBus, theme, drawConnectFunc, nextStepFunc) {
         this.camera = camera;
         this.authBean = authBean;
@@ -344,6 +343,8 @@ class AuthCard {
         this.isActive = false;
         this.z = 0;
         this.theme = theme;
+        this.expanded = false;
+        this.valid = false;
         this.bind();
         this.init();
 
@@ -357,6 +358,10 @@ class AuthCard {
         this.clearXY = this.clearXY.bind(this);
         this.init = this.init.bind(this);
         this.updateCardData = this.updateCardData.bind(this);
+        this.doOnClick = this.doOnClick.bind(this);
+        this.doOnClickAfterExpand = this.doOnClickAfterExpand.bind(this);
+        this.expand = this.expand.bind(this);
+        this.doOnTypeText = this.doOnTypeText.bind(this);
 
     }
 
@@ -364,8 +369,13 @@ class AuthCard {
         this.initCardPanel();
         if (this.authBean.authType === ENUM.AuthType.input) {
             this.initInputBlock();
-        } else {
+        }
+        if (this.authBean.authType === ENUM.AuthType.button) {
             this.initButtonBlock();
+        }
+        if (this.authBean.authType === ENUM.AuthType.collapsedInput
+            || this.authBean.authType === ENUM.AuthType.collapsedButton) {
+            this.initCollapsedInputBlock();
         }
         this.initListener();
     }
@@ -374,6 +384,7 @@ class AuthCard {
         this.cardPanel = document.createElement('div');
         this.cardPanel.classList.add('loginPanel');
         this.cardPanel.classList.add('noselect');
+        this.cardPanel.style.width = this.authBean.width + 'px';
         this.cardPanel.style.left = this.authBean.posX + 'px';
         this.cardPanel.style.top = this.authBean.posY + 'px';
     }
@@ -391,6 +402,20 @@ class AuthCard {
         this.updateCardData();
     }
 
+    initCollapsedInputBlock() {
+
+        this.button = document.createElement('div');
+        this.button.classList.add('loginCollapsedButton');
+        this.cardPanel.appendChild(this.button);
+
+        this.buttonText = document.createElement('span');
+        this.buttonText.classList.add('loginCollapsedButtonText');
+        this.buttonText.innerHTML = '+';
+        this.button.appendChild(this.buttonText);
+
+        this.cardPanel.style.width = 50 + 'px';
+
+    }
 
     updateCardData() {
         this.caption.innerHTML = '<span>' + this.authBean.caption + '</span>';
@@ -410,25 +435,57 @@ class AuthCard {
     }
 
     initListener() {
-        this.cardPanel.addEventListener('mousedown', this.saveXY);
-        document.addEventListener('mouseup', this.clearXY);
-        if (this.authBean.authType !== ENUM.AuthType.input) {
+        // this.cardPanel.addEventListener('mousedown', this.saveXY);
+        // document.addEventListener('mouseup', this.clearXY);
+        if (this.authBean.authType === ENUM.AuthType.button) {
             this.button.addEventListener('mousedown', this.doOnClick);
         }
+        if (this.authBean.authType === ENUM.AuthType.collapsedInput
+            || this.authBean.authType === ENUM.AuthType.collapsedButton) {
+            this.button.addEventListener('mousedown', this.doOnClickAfterExpand);
+        }
+        if (this.value) {
+            this.value.addEventListener('keyup', this.doOnTypeText);
+        }
+
         let button = this.button;
         let theme = this.theme;
 
         this.eventBus.addEventListener("changeTheme", function (data) {
             theme = data;
- //            if (this.authBean.authType !== ENUM.AuthType.input) {
- // //               button.setAttribute('src', 'images/' + data.getName() + '/info.svg');
- //            }
+            //            if (this.authBean.authType !== ENUM.AuthType.input) {
+            // //               button.setAttribute('src', 'images/' + data.getName() + '/info.svg');
+            //            }
         });
 
     }
 
-    doOnClick(){
+    doOnClick() {
         this.nextStepFunc();
+    }
+
+    doOnTypeText() {
+        this.nextStepFunc(true);
+    }
+
+    doOnClickAfterExpand() {
+        this.expand();
+        if (this.authBean.authType === ENUM.AuthType.collapsedInput) {
+            this.initInputBlock();
+            this.nextStepFunc();
+        }
+        if (this.authBean.authType === ENUM.AuthType.collapsedButton) {
+            this.initButtonBlock();
+            this.nextStepFunc(this.expanded);
+            this.expanded = true;
+        }
+        this.initListener();
+    }
+
+    expand() {
+        this.cardPanel.style.transition = 'width 1s ease-in-out';
+        this.cardPanel.style.width = this.authBean.width + 'px';
+        this.cardPanel.removeChild(this.button);
     }
 
     moveAuthCard(event) {
@@ -524,13 +581,35 @@ class AuthCard {
     }
 
     getValue() {
-        return this.authBean.value;
+        return this.value !== null ? this.value.value : "";
     }
 
     getId() {
         return this.authBean.id;
     }
 
+    setPos(x, y) {
+        this.cardPanel.style.left = x + 'px';
+        this.cardPanel.style.top = y + 'px';
+    }
+
+    setBorderRed() {
+        this.cardPanel.style.border = "3px solid rgba(255, 127, 127, 0.25)"
+        this.cardPanel.style.boxShadow = "0px 0px 12px rgba(255, 0, 0, 0.5)"
+    }
+
+    setBorderGreen() {
+        this.cardPanel.style.border = "3px solid rgba(127, 255, 127, 0.25)"
+        this.cardPanel.style.boxShadow = "0px 0px 12px rgba(0,255 , 0, 0.5)"
+    }
+
+    setValid(isValid) {
+        this.valid = isValid;
+    }
+
+    isValid() {
+        return this.valid;
+    }
 }
 
 export {PersonCard, AuthCard};

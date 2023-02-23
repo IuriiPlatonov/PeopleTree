@@ -1,15 +1,14 @@
 package com.people.services.impl;
 
-import com.people.dto.DefaultBean;
-import com.people.dto.PersonDto;
-import com.people.dto.PositionDto;
-import com.people.dto.SettingsDto;
+import com.people.dto.*;
 import com.people.dto.mapper.PersonDtoMapper;
 import com.people.dto.mapper.SettingsDtoMapper;
+import com.people.dto.mapper.WorkspaceDtoMapper;
 import com.people.dto.response.DeleteParentResponse;
 import com.people.model.Person;
 import com.people.repositories.PeopleRepository;
 import com.people.services.PeopleService;
+import com.people.utils.RandomGUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +26,13 @@ public class PeopleServiceImpl implements PeopleService {
     private final PeopleRepository peopleRepository;
     private final PersonDtoMapper personDtoMapper;
     private final SettingsDtoMapper settingsDtoMapper;
+    private final WorkspaceDtoMapper workspaceDtoMapper;
 
     @Override
     public List<PersonDto> getPeople(String userId) {
-        return personDtoMapper.toDtos(peopleRepository.getPeopleTree(userId));
+        var workspaces = getWorkspacesForUser(userId);
+        var workspace = workspaces.stream().findFirst().orElse(new WorkspaceDto());
+        return personDtoMapper.toDtos(peopleRepository.getPeopleTree(workspace.getId()));
     }
 
     @Override
@@ -56,6 +58,19 @@ public class PeopleServiceImpl implements PeopleService {
     }
 
     @Override
+    public WorkspaceDto createWorkspace(WorkspaceDto workspace) {
+        String id = RandomGUID.newValue();
+        workspace.setId(id);
+        peopleRepository.createWorkspace(workspaceDtoMapper.toEntity(workspace));
+        return workspace;
+    }
+
+    @Override
+    public List<WorkspaceDto> getWorkspacesForUser(String userId) {
+        return workspaceDtoMapper.toDtos(peopleRepository.getWorkspaces(userId));
+    }
+
+    @Override
     public void update(PersonDto person) {
         peopleRepository.update(personDtoMapper.toEntity(person));
 
@@ -63,7 +78,7 @@ public class PeopleServiceImpl implements PeopleService {
 
     @Override
     public PersonDto create(PersonDto person) {
-        String id = new BigInteger(UUID.randomUUID().toString().replace("-", ""), 16).toString();
+        String id = RandomGUID.newValue();
         person.setId(id);
         peopleRepository.create(personDtoMapper.toEntity(person));
         return person;

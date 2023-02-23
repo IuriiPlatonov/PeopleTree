@@ -21,5 +21,5 @@ public class PersonDto {
 	private String address;
 	private String posX;
 	private String posY;
-
+	private String workspaceId;
 }

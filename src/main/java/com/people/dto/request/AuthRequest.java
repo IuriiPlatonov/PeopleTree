@@ -1,4 +1,4 @@
-package com.people.dto.response;
+package com.people.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
+@NoArgsConstructor
+public class AuthRequest {
 
-    private boolean isAuthorized;
-    private String userId;
+    private String email;
+    private String password;
 
 }

@@ -11,10 +11,19 @@ public class PersonMapper implements RowMapper<Person> {
 
 	@Override
 	public Person mapRow(ResultSet rs, int rowNum) throws SQLException {
-		return Person.builder().id(rs.getString("p_id")).parentId(rs.getString("p_p_id")).firstName(rs.getString("first_name"))
-				.secondName(rs.getString("second_name")).patronymic(rs.getString("patronymic"))
-				.email(rs.getString("email")).age(rs.getString("age")).address(rs.getString("address"))
-				.posX(rs.getString("pos_x")).posY(rs.getString("pos_y")).build();
+		return Person.builder()
+				.id(rs.getString("p_id"))
+				.parentId(rs.getString("p_p_id"))
+				.firstName(rs.getString("first_name"))
+				.secondName(rs.getString("second_name"))
+				.patronymic(rs.getString("patronymic"))
+				.email(rs.getString("email"))
+				.age(rs.getString("age"))
+				.address(rs.getString("address"))
+				.posX(rs.getString("pos_x"))
+				.posY(rs.getString("pos_y"))
+				.workspaceId(rs.getString("ws_id"))
+				.build();
 
 	}
 

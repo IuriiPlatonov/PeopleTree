@@ -53,6 +53,19 @@ class MainMenu {
         this.darkThemeButton.classList.add('mainMenuDarkThemeButton');
         this.darkThemeButton.innerHTML = '<span class="mainMenuDarkThemeButtonText">Тёмная</span>';
         themePanel.appendChild(this.darkThemeButton);
+
+        let loginPanel = document.createElement('fieldSet');
+        loginPanel.classList.add('mainMenuLoginPanel');
+        this.mainMenuPanel.appendChild(loginPanel);
+
+        let loginLegend = document.createElement('legend');
+        loginLegend.innerHTML = 'Тутс';
+        loginPanel.appendChild(loginLegend);
+
+        this.logoutButton = document.createElement('div');
+        this.logoutButton.classList.add('mainMenuButtons');
+        this.logoutButton.innerHTML = '<span class="mainMenuThemeButtonText">Выход</span>';
+        loginPanel.appendChild(this.logoutButton);
     }
     
     setVisible() {
@@ -99,6 +112,13 @@ class MainMenu {
         	eventBus.fireEvent("changeTheme", ENUM.ThemeType.dark);
         	
         });
+
+        this.logoutButton.addEventListener('click', function () {
+            RequestMappingUtils.postWithoutBodyResponse("/logout", function () {
+                window.parent.checkAuth();
+            });
+        });
+
         this.eventBus.addEventListener("changeTheme", function(data){
         	settingButton.setAttribute('src',  'images/' + data.getName() + '/menu.svg');
         	setTheme(data);
