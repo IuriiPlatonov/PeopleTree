@@ -1,6 +1,6 @@
 package com.people.services.impl;
 
-import com.people.dto.PersonDto;
+import com.people.dto.CardDto;
 import com.people.dto.WorkspaceDto;
 import com.people.dto.request.AuthRequest;
 import com.people.dto.request.CheckRegFieldRequest;
@@ -12,7 +12,8 @@ import com.people.enums.Role;
 import com.people.model.User;
 import com.people.repositories.UserRepository;
 import com.people.services.AuthService;
-import com.people.services.PeopleService;
+import com.people.services.CardService;
+import com.people.services.WorkspacesService;
 import com.people.utils.RandomGUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,10 +41,10 @@ public class AuthServiceImpl implements AuthService {
     private static final String PASSWORD_REGEX = "(?=.*[0-9])(?=.*[!@#$%^*])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!@#$%^*]{6,}";
 
     private final UserRepository userRepository;
-    private final PeopleService peopleService;
+    private final CardService cardService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
-
+    private final WorkspacesService workspacesService;
 
     @Override
     public RegisterResponse checkValid(CheckRegFieldRequest request) {
@@ -69,11 +70,11 @@ public class AuthServiceImpl implements AuthService {
 
         login(new AuthRequest(request.getEmail(), request.getPassword()));
 
-        var workspace = peopleService.createWorkspace(WorkspaceDto.builder()
+        var workspace = workspacesService.createWorkspace(WorkspaceDto.builder()
                 .userId(user.getId())
                 .build());
 
-        peopleService.create(PersonDto.builder()
+        cardService.create(CardDto.builder()
                 .workspaceId(workspace.getId())
                 .firstName(user.getFirstName())
                 .secondName(user.getLastName())
@@ -118,7 +119,7 @@ public class AuthServiceImpl implements AuthService {
         boolean isExist = isMatches && userRepository.findByEmail(text).isPresent();
 
         return new RegisterResponse(isMatches && !isExist,
-                isExist ? "Пользователь с таким email уже зарегестрирован" : "");
+                !isMatches ? "Это не почта" : isExist ? "Пользователь с таким email уже зарегестрирован" : "");
     }
 
 }

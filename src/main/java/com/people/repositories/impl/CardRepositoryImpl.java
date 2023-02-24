@@ -1,15 +1,12 @@
 package com.people.repositories.impl;
 
-import com.people.model.Person;
+import com.people.model.Card;
 import com.people.model.Settings;
-import com.people.model.Workspace;
 import com.people.model.mapper.PersonMapper;
 import com.people.model.mapper.SettingsMapper;
-import com.people.model.mapper.WorkspaceMapper;
-import com.people.repositories.PeopleRepository;
+import com.people.repositories.CardRepository;
 import com.people.utils.RepositoryUtils;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Repository;
@@ -21,36 +18,31 @@ import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
-public class PeopleRepositoryImpl implements PeopleRepository {
+public class CardRepositoryImpl implements CardRepository {
 
     private final NamedParameterJdbcOperations namedParameterJdbcOperations;
 
     @Value("#{sqlReader.getStatement('sqls/people.sql')}")
-    private String people;
+    private String cards;
     @Value("#{sqlReader.getStatement('sqls/update/personPosition.sql')}")
-    private String updatePersonPosition;
+    private String updateCardPosition;
     @Value("#{sqlReader.getStatement('sqls/delete/person.sql')}")
-    private String deletePerson;
+    private String deleteCard;
     @Value("#{sqlReader.getStatement('sqls/update/person.sql')}")
-    private String updatePerson;
+    private String updateCard;
     @Value("#{sqlReader.getStatement('sqls/create/person.sql')}")
-    private String createPerson;
-    @Value("#{sqlReader.getStatement('sqls/settings.sql')}")
-    private String getSettings;
+    private String createCard;
     @Value("#{sqlReader.getStatement('sqls/children.sql')}")
     private String children;
     @Value("#{sqlReader.getStatement('sqls/personByParentId.sql')}")
-    private String personByParentId;
-    @Value("#{sqlReader.getStatement('sqls/create/workspace.sql')}")
-    private String createWorkspace;
-    @Value("#{sqlReader.getStatement('sqls/workspace.sql')}")
-    private String workspace;
+    private String cardByParentId;
+
 //    @Value("#{sqlReader.getStatement('sqls/delete/people.sql')}")
 //    private String deletePeople;
 
     @Override
-    public void create(Person object) {
-        String sql = createPerson;
+    public void create(Card object) {
+        String sql = createCard;
         Map<String, Object> params = new HashMap<>();
         params.put("id", new BigDecimal(object.getId()));
         params.put("p_p_id", RepositoryUtils.getBigDecimalOrNull(object.getParentId()));
@@ -68,8 +60,8 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     }
 
     @Override
-    public void update(Person object) {
-        String sql = updatePerson;
+    public void update(Card object) {
+        String sql = updateCard;
         Map<String, Object> params = new HashMap<>();
         params.put("id", new BigDecimal(object.getId()));
         params.put("parent_id", RepositoryUtils.getBigDecimalOrNull(object.getParentId()));
@@ -84,8 +76,8 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     }
 
     @Override
-    public void delete(Person object) {
-        String sql = deletePerson;
+    public void delete(Card object) {
+        String sql = deleteCard;
         Map<String, Object> params = new HashMap<>();
         params.put("id", new BigDecimal(object.getId()));
 
@@ -93,21 +85,21 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     }
 
     @Override
-    public List<Person> getPeopleTree(String workspaceId) {
-        String sql = people;
+    public List<Card> getCardsForWorkspace(String workspaceId) {
+        String sql = cards;
         Map<String, Object> params = new HashMap<>();
         params.put("ws_id", new BigDecimal(workspaceId));
         return namedParameterJdbcOperations.query(sql, params, new PersonMapper());
     }
 
     @Override
-    public Person getById(String id) {
+    public Card getById(String id) {
         return null;
     }
 
     @Override
     public void updatePosition(String id, String posX, String posY) {
-        String sql = updatePersonPosition;
+        String sql = updateCardPosition;
         Map<String, Object> params = new HashMap<>();
         params.put("id", new BigDecimal(id));
         params.put("pos_x", new BigDecimal(posX));
@@ -117,15 +109,7 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     }
 
     @Override
-    public Settings getSettings(String userId) {
-        String sql = getSettings;
-        Map<String, Object> params = new HashMap<>();
-        params.put("id", new BigDecimal(userId));
-        return namedParameterJdbcOperations.query(sql, params, new SettingsMapper()).get(0);
-    }
-
-    @Override
-    public List<Person> getChildren(String id) {
+    public List<Card> getChildren(String id) {
         String sql = children;
         Map<String, Object> params = new HashMap<>();
         params.put("id", new BigDecimal(id));
@@ -134,10 +118,10 @@ public class PeopleRepositoryImpl implements PeopleRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void deletePeople(List<Person> people) {
-        String sql = deletePerson;
-        Map<String, Object>[] allParams = new Map[people.size()];
-        people.stream().map(bean -> {
+    public void deleteCards(List<Card> cards) {
+        String sql = deleteCard;
+        Map<String, Object>[] allParams = new Map[cards.size()];
+        cards.stream().map(bean -> {
             Map<String, Object> params = new HashMap<>();
             params.put("id", new BigDecimal(bean.getId()));
             return params;
@@ -147,8 +131,8 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     }
 
     @Override
-    public List<Person> getPersonByParentId(String id) {
-        String sql = personByParentId;
+    public List<Card> getCardsByParentId(String id) {
+        String sql = cardByParentId;
         Map<String, Object> params = new HashMap<>();
         params.put("parentId", new BigDecimal(id));
         return namedParameterJdbcOperations.query(sql, params, new PersonMapper());
@@ -156,8 +140,8 @@ public class PeopleRepositoryImpl implements PeopleRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void updatePeople(List<Person> firstChildren) {
-        String sql = updatePerson;
+    public void updateCards(List<Card> firstChildren) {
+        String sql = updateCard;
         Map<String, Object>[] allParams = new Map[firstChildren.size()];
         firstChildren.stream().map(object -> {
             Map<String, Object> params = new HashMap<>();
@@ -175,24 +159,6 @@ public class PeopleRepositoryImpl implements PeopleRepository {
         namedParameterJdbcOperations.batchUpdate(sql, allParams);
     }
 
-    @Override
-    public void createWorkspace(Workspace object) {
-        String sql = createWorkspace;
-        Map<String, Object> params = new HashMap<>();
-        params.put("ws_id", new BigDecimal(object.getId()));
-        params.put("user_id", new BigDecimal(object.getUserId()));
-        params.put("kind_id", StringUtils.isBlank(object.getKindId()) ? null : new BigDecimal(object.getKindId()));
 
-
-        namedParameterJdbcOperations.update(sql, params);
-    }
-
-    @Override
-    public List<Workspace> getWorkspaces(String userId) {
-        String sql = workspace;
-        Map<String, Object> params = new HashMap<>();
-        params.put("user_id", new BigDecimal(userId));
-        return namedParameterJdbcOperations.query(sql, params, new WorkspaceMapper());
-    }
 
 }

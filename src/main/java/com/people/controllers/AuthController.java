@@ -1,5 +1,6 @@
 package com.people.controllers;
 
+import com.people.dto.UserDto;
 import com.people.dto.request.AuthRequest;
 import com.people.dto.request.CheckRegFieldRequest;
 import com.people.dto.request.RegisterRequest;
@@ -27,14 +28,15 @@ public class AuthController {
     @GetMapping("checkAuth")
     public ResponseEntity<AuthResponse> checkAuth(Principal principal) {
         boolean isAuthorized = principal != null;
-        String userId = isAuthorized
-                ? userService.getByEmail(principal.getName()).getId()
-                : "";
-        Object po = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDto user = isAuthorized
+                ? userService.getByEmail(principal.getName())
+                : new UserDto();
+
         return ResponseEntity.ok().body(
                 AuthResponse.builder()
                         .isAuthorized(isAuthorized)
-                        .userId(userId)
+                        .userId(user.getId())
+                        .username(user.getFirstName())
                         .build());
 
     }

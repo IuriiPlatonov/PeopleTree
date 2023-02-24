@@ -7,12 +7,10 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class MainController {
 
-	@GetMapping("/")
-	public ModelAndView index() {
-		ModelAndView modelAndView = new ModelAndView();
-		modelAndView.setViewName("index.html");
-		return modelAndView;
-	}
-	
-	
+    @GetMapping("/")
+    public ModelAndView index() {
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.setViewName("index.html");
+        return modelAndView;
+    }
 }

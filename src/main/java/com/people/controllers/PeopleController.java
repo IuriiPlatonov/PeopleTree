@@ -2,7 +2,7 @@ package com.people.controllers;
 
 import com.people.dto.*;
 import com.people.dto.response.DeleteParentResponse;
-import com.people.services.PeopleService;
+import com.people.services.CardService;
 import com.people.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,50 +17,45 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PeopleController {
 
-    private final PeopleService peopleService;
+    private final CardService cardService;
     private final UserService userService;
 
     @GetMapping("people")
-    public ResponseEntity<List<PersonDto>> getPeople(/*@RequestParam("userId") String userId*/Principal principal) {
+    public ResponseEntity<List<CardDto>> getPeople(/*@RequestParam("userId") String userId*/Principal principal) {
         UserDto user = userService.getByEmail(principal.getName());
-        return ResponseEntity.ok(peopleService.getPeople(user.getId()));
+        return ResponseEntity.ok(cardService.getCards(user.getId()));
     }
 
     @PostMapping("savePositions")
     @PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<Void> updateCardPositions(@RequestBody PositionDto position) {
-        peopleService.updateCardPosition(position);
+        cardService.updateCardPosition(position);
         return ResponseEntity.ok().body(null);
     }
 
     @PostMapping("delete")
-    public ResponseEntity<List<PersonDto>> delete(@RequestBody PersonDto person) {
-        return ResponseEntity.ok().body(peopleService.delete(person));
+    public ResponseEntity<List<CardDto>> delete(@RequestBody CardDto person) {
+        return ResponseEntity.ok().body(cardService.delete(person));
     }
 
     @PostMapping("deleteParent")
-    public ResponseEntity<DeleteParentResponse> deleteParent(@RequestBody PersonDto person) {
-        return ResponseEntity.ok().body(peopleService.deleteParent(person));
+    public ResponseEntity<DeleteParentResponse> deleteParent(@RequestBody CardDto person) {
+        return ResponseEntity.ok().body(cardService.deleteParent(person));
     }
 
     @PostMapping("update")
-    public ResponseEntity<Void> update(@RequestBody PersonDto person) {
-        peopleService.update(person);
+    public ResponseEntity<Void> update(@RequestBody CardDto person) {
+        cardService.update(person);
         return ResponseEntity.ok().body(null);
     }
 
     @PostMapping("create")
-    public ResponseEntity<PersonDto> create(@RequestBody PersonDto person) {
-        return ResponseEntity.ok(peopleService.create(person));
-    }
-
-    @GetMapping("settings")
-    public ResponseEntity<SettingsDto> getSettings() {
-        return ResponseEntity.ok(peopleService.getSettings("1"));
+    public ResponseEntity<CardDto> create(@RequestBody CardDto person) {
+        return ResponseEntity.ok(cardService.create(person));
     }
 
     @GetMapping("childrenCount")
     public ResponseEntity<DefaultBean> getChildrenCount(@RequestParam("personId") String personId) {
-        return ResponseEntity.ok(peopleService.getChildrenCount(personId));
+        return ResponseEntity.ok(cardService.getChildrenCount(personId));
     }
 }

@@ -134,7 +134,7 @@ html, body {
 	text-rendering: optimizeLegibility;
 	box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.5);
 	border-radius: 7px;
-	cursor: move;
+	cursor: default;
 	/*width: 210px;*/
 	height: 50px;
 	background: white;
@@ -221,4 +221,31 @@ html, body {
 	display: flex;
 	margin-top: -1px;
 	justify-content: center;
+}
+
+.InfoCardPanel {
+	border: 1px solid rgb(133 200 255 / 46%);
+	/* display: flex; */
+	font-family: "Times New Roman", Georgia, Serif, serif;
+	text-shadow: none;
+	text-rendering: geometricPrecision;
+	box-shadow: 0px 0px 8px 0px rgb(0 184 255 / 46%);
+	border-radius: 7px;
+	cursor: move;
+	/* width: 210px; */
+	height: auto;
+	background: rgb(209 233 255);
+	/* align-items: center; */
+	/* justify-content: space-around; */
+	color: rgb(0 0 0);
+}
+
+.infoCardPanelButton {
+	position: absolute;
+	right: 2px;
+	top: -12px;
+	cursor: pointer;
+}
+
+.infoCardPanelButtonText {
 }

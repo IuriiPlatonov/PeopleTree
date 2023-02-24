@@ -17,19 +17,19 @@ let authUrl = "/api/auth/login";
 let registrationUrl = "/api/auth/registration";
 let checkValidUrl = "/api/auth/checkValid";
 
-let currentTimerId;
-
 let camera, scene, renderer;
 let controls;
 let menu;
 
 let objects = new Map;
 let bones = new Map();
+let timers = new Map();
+let infoIds = new Map();
 let eventBus = new EventBus();
 
 
 initScene();
-createMenu();
+initEventListeners();
 checkAuth();
 
 function initScene() {
@@ -44,10 +44,47 @@ function initScene() {
     controls = new TrackballControls(camera, renderer.domElement);
     controls.minDistance = 100;
     controls.maxDistance = 6000;
-    controls.addEventListener('change', render);
+    //  controls.addEventListener('change', render);
     controls.panSpeed = 0.29;
     controls.noRotate = true; // default false
     window.addEventListener('resize', onWindowResize);
+
+    menu = new MENU.MainMenu(eventBus);
+    animate();
+}
+
+function initEventListeners() {
+    eventBus.addEventListener("removeObjects", function (objects) {
+        removeObjects(objects);
+    });
+    eventBus.addEventListener("addObject", function (object) {
+        addObject(object);
+    });
+    eventBus.addEventListener("checkAuth", function () {
+        checkAuth();
+    });
+    eventBus.addEventListener("updateObjectParent", function (data) {
+        updateObjectParent(data);
+    });
+    eventBus.addEventListener("updateTarget", function (id) {
+        updateTarget(id);
+    });
+
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    setTimeout(function () {
+        requestAnimationFrame(animate);
+    }, 1000 / 120);
+    TWEEN.update();
+    controls.update();
+    renderer.render(scene, camera);
 }
 
 /**
@@ -57,9 +94,9 @@ function initScene() {
  */
 function checkAuth() {
     RequestMappingUtils.get(checkAuthUrl, function (response) {
-        clearObjects();
+        removeObjects(new Map(objects));
         if (response.authorized) {
-            //           localStorage.setItem('userId', response.userId);
+            sendChangeUsernameEvent(response.username);
             createPeopleTree();
         } else {
             createLoginObjects();
@@ -70,35 +107,83 @@ function checkAuth() {
 /**
  * Сносим все объекты
  */
-function clearObjects() {
-    objects.clear();
-    scene.clear();
-    bones.clear();
+function removeObjects(objectsToDel) {
+    objectsToDel.forEach(function (entry) {
+        let key = entry.object ? entry.object.getId() : entry.id;
+        setRandomCordToObjectById(key);
+        transform(key, 1000, function (tween, id) {
+            scene.remove(objects.get(id) ? objects.get(id).objectCSS : '');
+            scene.remove(bones.get(id));
+            bones.delete(id);
+            objects.delete(id);
+            TWEEN.remove(tween);
+        });
+    });
 }
 
-function createMenu() {
-    menu = new MENU.MainMenu(eventBus);
+/**
+ * Сносим объект по id
+ */
+function removeObjectById(id) {
+    if (objects.get(id)) {
+        setRandomCordToObjectById(id);
+
+        transform(id, 1000, function () {
+            scene.remove(objects.get(id).objectCSS);
+            scene.remove(bones.get(id));
+            bones.delete(id);
+            objects.delete(id);
+        });
+    }
+}
+
+/**
+ * Добавляем объект на сцену и анимируем его
+ */
+function addObject(object) {
+    addObjectToScene(object);
+    transform(object.getId(), 500, function () {
+    });
+}
+
+/**
+ * При удалении узла дерева обновляем parentId его детям
+ */
+function updateObjectParent(obj) {
+    obj.children.forEach(function (entry) {
+        let object = objects.get(entry.id).object;
+        object.setParentId(obj.parent[0].parentId);
+    });
+
+}
+
+
+/**
+ * Обновить координаты цели анимации
+ */
+function updateTarget(id) {
+    let object = objects.get(id).object;
+    let target = objects.get(id).target.table;
+    target.position.y = object.getX();
+    target.position.x = object.getY();
 }
 
 /**
  * Рисуем сцену авторизованного пользователя
  */
 function initPeopleMap(people) {
-
     people.forEach(function (entry) {
-
         let person = new BEAN.PersonBean(entry.id, entry.parentId, entry.workspaceId, entry.firstName, entry.secondName, entry.patronymic,
             entry.age, entry.email, entry.address, entry.posX, entry.posY);
         let theme = menu.theme;
         let personCard = new OBJECT.PersonCard(person, camera, eventBus, theme, redrawConnections);
-        addObjectToScene(personCard);
+        // addObjectToScene(personCard);
+        addObject(personCard);
     });
+}
 
-    redrawConnections();
-    transform(1000, function () {
-    });
-
-
+function sendChangeUsernameEvent(name) {
+    eventBus.fireEvent("changeUserName", name);
 }
 
 /**
@@ -130,7 +215,7 @@ function drawCSS3DLine(id, start, end) {
 
     // object.matrixAutoUpdate = false;
     object.updateMatrix();
-    render();
+//    render();
 }
 
 /**
@@ -146,56 +231,43 @@ function createBone(id) {
     return object;
 }
 
+
+function transformAll(duration, callback) {
+    objects.forEach((value, key) => {
+        transform(key, duration, callback);
+    });
+}
+
 /**
  * Анимация с помощью библиотеки TWEEN
  * duration - cкорость анимации в мс
  * callback - функция выподняется по окончанию анимации
  */
-function transform(duration, callback) {
-    TWEEN.removeAll();
-
-    objects.forEach((value, key) => {
-        const objectCSS = value.objectCSS;
-        const target = value.target.table;
-        const object = value.object;
-
-        new TWEEN.Tween({
-            top: parseInt(objectCSS.element.style.top.replace("px", "")),
-            left: parseInt(objectCSS.element.style.left.replace("px", "")),
-            z: objectCSS.position.z
-        })
-            .to({
-                top: target.position.x, left: target.position.y, z: target.position.z
-            }, Math.random() * duration + duration)
-            .onUpdate(function (obj) {
-                objectCSS.element.style.top = obj.top + 'px';
-                objectCSS.element.style.left = obj.left + 'px';
-                objectCSS.position.z = obj.z;
-                object.setZ(obj.z);
-                redrawConnections();
-            })
-            .easing(TWEEN.Easing.Exponential.InOut)
-            .onComplete(callback)
-            .start();
+function transform(id, duration, callback) {
+    let object = objects.get(id);
+    const objectCSS = object.objectCSS;
+    const target = object.target.table;
+    const card = object.object;
+    let tween = new TWEEN.Tween({
+        x: parseInt(objectCSS.element.style.top.replace("px", "")),
+        y: parseInt(objectCSS.element.style.left.replace("px", "")),
+        z: objectCSS.position.z
     });
+    tween.to({
+        x: target.position.x, y: target.position.y, z: target.position.z
+    }, Math.random() * duration + duration)
+        .onUpdate(function (obj) {
+            objectCSS.element.style.top = obj.x + 'px';
+            objectCSS.element.style.left = obj.y + 'px';
+            objectCSS.position.z = obj.z;
+            card.setZ(obj.z);
+            redrawConnections();
+        })
+        .easing(TWEEN.Easing.Exponential.InOut)
+        .onComplete(t => callback(tween, id))
+        .start();
 }
 
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    render();
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    TWEEN.update();
-    controls.update();
-}
-
-function render() {
-    renderer.render(scene, camera);
-}
 
 /**
  * Добавляем объект из класса Objects на сцену
@@ -244,18 +316,19 @@ function createTableTarget(object) {
 //	    i= i+1;
 //	  });
 //}
-
+function setRandomCordToObjectById(id) {
+    let target = objects.get(id).target.table;
+    target.position.y = (Math.random() * 6000) * (Math.random() < 0.5 ? -1 : 1);
+    target.position.x = (Math.random() * 6000) * (Math.random() < 0.5 ? -1 : 1);
+    target.position.z = (Math.random() * 6000) * (Math.random() < 0.5 ? -1 : 1);
+}
 
 /**
  * Каждый раз когда смещаем любой объект вызываем
  * эту функцию для перерисовки линий связи
  */
+
 function redrawConnections() {
-    //  let id = localStorage.getItem('userId') != null ? localStorage.getItem('userId') : '1';
-    //   if (!objects.get(id)) {
-    //       return;
-    //   }
-    render();
     objects.forEach((value, key) => {
         if (!value.object.getParentId() || value.object.getParentId() === '') {
             let rootObject = value.object;
@@ -278,7 +351,6 @@ function connectToChildNode(id, start_x, start_y, start_z, camera) {
 
             connectToChildNode(object.getId(), x, y, z, camera);
         }
-
     });
 }
 
@@ -286,58 +358,18 @@ function connectToChildNode(id, start_x, start_y, start_z, camera) {
  * AJAX запрос на карточки авторизованного пользователя
  */
 function createPeopleTree() {
-    RequestMappingUtils.get(getPeopleUrl /*+ "?" + new URLSearchParams({userId: '1'})*/, function (people) {
+    RequestMappingUtils.get(getPeopleUrl, function (people) {
         initPeopleMap(people);
-        animate();
     });
 }
 
-/**
- * Глобальные функции доступные везде.
- */
-window.checkAuth = function () {
-    checkAuth();
-}
-
-window.addObject = function (object) {
-    addObjectToScene(object);
-    redrawConnections();
-    transform(1000, function () {
+function createInfoObject(parentId, caption, message, x, y, height) {
+    let infoBean = new BEAN.AuthBean(UUID.generate(), parentId, caption, message, x, y, height, ENUM.InfoType.info);
+    let infoObject = new OBJECT.InfoCard(infoBean, camera, eventBus, menu.theme, redrawConnections, function () {
+        removeObjectById(infoObject.getId());
     });
-}
-
-window.delObjects = function (objectsToDel) {
-
-    objectsToDel.forEach(function (entry) {
-        let target = objects.get(entry.id).target.table;
-        target.position.y = (Math.random() * 6000) * (Math.random() < 0.5 ? -1 : 1);
-        target.position.x = (Math.random() * 6000) * (Math.random() < 0.5 ? -1 : 1);
-        target.position.z = (Math.random() * 6000) * (Math.random() < 0.5 ? -1 : 1);
-    });
-
-    transform(1000, function () {
-        for (let i = 0; i < objectsToDel.length; i++) {
-            scene.remove(objects.get(objectsToDel[i].id).objectCSS);
-            scene.remove(bones.get(objectsToDel[i].id));
-            objects.delete(objectsToDel[i].id);
-            objectsToDel.splice(i, 1);
-        }
-    });
-
-}
-
-window.updateObjectParent = function (parent, children) {
-    children.forEach(function (entry) {
-        let object = objects.get(entry.id).object;
-        object.setParentId(parent[0].parentId);
-    });
-}
-
-window.updateTarget = function (id) {
-    let object = objects.get(id).object;
-    let target = objects.get(id).target.table;
-    target.position.y = object.getX();
-    target.position.x = object.getY();
+    addAuthObject(infoObject);
+    return infoObject.getId();
 }
 
 /** Объекты авторизации*/
@@ -347,39 +379,35 @@ window.updateTarget = function (id) {
  */
 function createLoginObjects() {
 
-    let loginBean = new BEAN.AuthBean('1', null, "Логин", "", 0, 0, 210, ENUM.AuthType.input);
+    let loginBean = new BEAN.AuthBean(UUID.generate(), null, "Логин", "", 0, 0, 210, ENUM.AuthType.input);
     let loginObject = new OBJECT.AuthCard(loginBean, camera, eventBus, menu.theme, redrawConnections, function () {
     });
 
-    let passBean = new BEAN.AuthBean('2', '1', "Пароль", "", 0, -100, 210, ENUM.AuthType.input);
+
+    let passBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Пароль", "", 0, -100, 210, ENUM.AuthType.input);
     let passObject = new OBJECT.AuthCard(passBean, camera, eventBus, menu.theme, redrawConnections, function () {
     });
 
-    let createAccBean = new BEAN.AuthBean('3', '1', "Регистрация", "", 300, 50, 210, ENUM.AuthType.button);
+    let createAccBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Регистрация", "", 300, 50, 210, ENUM.AuthType.button);
     let createAccObject = new OBJECT.AuthCard(createAccBean, camera, eventBus, menu.theme, redrawConnections, function () {
-        clearObjects();
-
+        removeObjects(new Map(objects));
         createRegisterObjects()
     });
 
-    let recoverPassBean = new BEAN.AuthBean('4', '1', "Восстановить пароль", "", 320, -50, 210, ENUM.AuthType.button);
+    let recoverPassBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Восстановить пароль", "", 320, -50, 210, ENUM.AuthType.button);
     let recoverPassObject = new OBJECT.AuthCard(recoverPassBean, camera, eventBus, menu.theme, redrawConnections, function () {
     });
 
-    let enterBean = new BEAN.AuthBean('5', '2', "Войти", "", 0, -200, 210, ENUM.AuthType.button);
+    let enterBean = new BEAN.AuthBean(UUID.generate(), passObject.getId(), "Войти", "", 0, -200, 210, ENUM.AuthType.button);
     let enterObject = new OBJECT.AuthCard(enterBean, camera, eventBus, menu.theme, redrawConnections, function () {
-        // let bcrypt = dcodeIO.bcrypt;
-        // let salt = bcrypt.genSaltSync(12);
-        // let hash = bcrypt.hashSync(passObject.getValue(), 12);
-
         let json = JSON.stringify({email: loginObject.getValue(), password: passObject.getValue()});
-        RequestMappingUtils.postWithResponse(authUrl /*"login?" + new URLSearchParams({
-            username: loginObject.getValue(), password: passObject.getValue() })*/, json, function (response) {
+        RequestMappingUtils.postWithResponse(authUrl, json, function (response) {
             checkAuth();
         });
     });
 
     addAuthObject(loginObject);
+
     addAuthObject(passObject);
     addAuthObject(createAccObject);
     addAuthObject(recoverPassObject);
@@ -389,15 +417,17 @@ function createLoginObjects() {
 /** РЕГИСТРАЦИЯ
  *  В случае если пользователь не зарегестрирован создаем сцену для регистрации
  */
+
 function createRegisterObjects() {
-    let firstNameBean = new BEAN.AuthBean('1', '', "Имя", "", -100, 0, 300, ENUM.AuthType.input);
+
+    let firstNameBean = new BEAN.AuthBean(UUID.generate(), '', "Имя", "", -100, 0, 300, ENUM.AuthType.input);
     let firstNameObject = new OBJECT.AuthCard(firstNameBean, camera, eventBus, menu.theme, redrawConnections, function (isType) {
         if (isType) {
             checkValidForAuthObjectWithDelay(firstNameObject, "name");
         }
     });
 
-    let lastNameBean = new BEAN.AuthBean('2', '1', "Фамилия", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
+    let lastNameBean = new BEAN.AuthBean(UUID.generate(), firstNameObject.getId(), "Фамилия", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
     let lastNameObject = new OBJECT.AuthCard(lastNameBean, camera, eventBus, menu.theme, redrawConnections, function (isType) {
         if (isType) {
             checkValidForAuthObjectWithDelay(lastNameObject, "name");
@@ -408,7 +438,7 @@ function createRegisterObjects() {
         }
     });
 
-    let patronymicBean = new BEAN.AuthBean('3', '2', "Отчество", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
+    let patronymicBean = new BEAN.AuthBean(UUID.generate(), lastNameObject.getId(), "Отчество", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
     let patronymicObject = new OBJECT.AuthCard(patronymicBean, camera, eventBus, menu.theme, redrawConnections, function (isType) {
         if (isType) {
             checkValidForAuthObjectWithDelay(patronymicObject, "name");
@@ -419,7 +449,7 @@ function createRegisterObjects() {
         }
     });
 
-    let emailBean = new BEAN.AuthBean('4', '3', "email", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
+    let emailBean = new BEAN.AuthBean(UUID.generate(), patronymicObject.getId(), "email", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
     let emailObject = new OBJECT.AuthCard(emailBean, camera, eventBus, menu.theme, redrawConnections, function (isType) {
         if (isType) {
             checkValidForAuthObjectWithDelay(emailObject, "email");
@@ -430,7 +460,7 @@ function createRegisterObjects() {
         }
     });
 
-    let passBean = new BEAN.AuthBean('5', '4', "Пароль", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
+    let passBean = new BEAN.AuthBean(UUID.generate(), emailObject.getId(), "Пароль", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
     let passObject = new OBJECT.AuthCard(passBean, camera, eventBus, menu.theme, redrawConnections, function (isType) {
         if (isType) {
             checkValidForAuthObjectWithDelay(passObject, "password");
@@ -441,7 +471,7 @@ function createRegisterObjects() {
         }
     });
 
-    let confirmPassBean = new BEAN.AuthBean('6', '5', "Подтвердить", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
+    let confirmPassBean = new BEAN.AuthBean(UUID.generate(), passObject.getId(), "Подтвердить", "", 100, 0, 300, ENUM.AuthType.collapsedInput);
     let confirmPassObject = new OBJECT.AuthCard(confirmPassBean, camera, eventBus, menu.theme, redrawConnections, function (isType) {
         if (isType) {
             checkValidConfirmPassword(passObject, confirmPassObject);
@@ -453,7 +483,7 @@ function createRegisterObjects() {
     });
 
 
-    let enterBean = new BEAN.AuthBean('7', '6', "Зарегистрировать", "", 100, 0, 300, ENUM.AuthType.collapsedButton);
+    let enterBean = new BEAN.AuthBean(UUID.generate(), confirmPassObject.getId(), "Зарегистрировать", "", 100, 0, 300, ENUM.AuthType.collapsedButton);
     let enterObject = new OBJECT.AuthCard(enterBean, camera, eventBus, menu.theme, redrawConnections, function (expanded) {
         if (!expanded) {
             moveObject(enterObject.getId(), 0, 0, 0, 500);
@@ -481,10 +511,11 @@ function createRegisterObjects() {
  * fieldTypeToValidation: name, email, password
  * */
 function checkValidForAuthObjectWithDelay(object, fieldTypeToValidation, delay) {
-    clearTimeout(currentTimerId);
-    currentTimerId = setTimeout(() => {
+    clearTimeout(timers.get(object.getId()));
+    let timer = setTimeout(() => {
         checkValidForObject(object, fieldTypeToValidation);
     }, delay ? delay : 1000);
+    timers.set(object.getId(), timer);
 }
 
 function checkValidForObject(object, fieldTypeToValidation) {
@@ -493,9 +524,16 @@ function checkValidForObject(object, fieldTypeToValidation) {
         if (response.valid) {
             object.setBorderGreen();
             object.setValid(true);
+            removeObjectById(infoIds.get(object.getId()));
+            infoIds.delete(object.getId());
         } else {
             object.setBorderRed();
             object.setValid(false);
+            removeObjectById(infoIds.get(object.getId()));
+            infoIds.delete(object.getId());
+            let id = createInfoObject(object.getId(), "Инфо", response.message,
+                object.getPosX(), object.getPosY() + 100, 300);
+            infoIds.set(object.getId(), id);
         }
     });
 }
@@ -504,27 +542,37 @@ function checkValidConfirmPassword(passObj, confPassObj) {
     if (passObj.getValue() === confPassObj.getValue()) {
         confPassObj.setBorderGreen();
         confPassObj.setValid(true);
+        removeObjectById(infoIds.get(confPassObj.getId()));
+        infoIds.delete(confPassObj.getId());
     } else {
         confPassObj.setBorderRed();
         confPassObj.setValid(false);
+        removeObjectById(infoIds.get(confPassObj.getId()));
+        infoIds.delete(confPassObj.getId());
+        let id = createInfoObject(confPassObj.getId(), "Инфо", "Пароли не совпадают",
+            confPassObj.getPosX(), confPassObj.getPosY() + 100, 300);
+        infoIds.set(confPassObj.getId(), id);
     }
 }
 
 function moveObject(id, x, y, z, duration) {
     let target = objects.get(id).target.table;
+    let object = objects.get(id).object;
     target.position.y = x;
     target.position.x = y;
     target.position.z = z;
-    transform(duration ? duration : 1000, function () {
+    object.setPosX(x);
+    object.setPosY(y);
+    transform(id, duration ? duration : 1000, function () {
     });
 }
 
 
 function addAuthObject(object, duration) {
     addObjectToScene(object);
-    redrawConnections();
-    transform(duration ? duration : 1000, function () {
+    // redrawConnections();
+    transform(object.getId(), duration ? duration : 1000, function () {
     });
-    animate();
+
 }
 

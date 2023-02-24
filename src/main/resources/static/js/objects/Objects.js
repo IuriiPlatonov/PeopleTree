@@ -3,11 +3,10 @@ import * as ENUM from 'enum';
 import * as BEAN from 'beans';
 
 
-class PersonCard {
-
-    constructor(person, camera, eventBus, theme, drawConnectFunc) {
+class Card {
+    constructor(cardBean, camera, eventBus, theme, drawConnectFunc) {
         this.camera = camera;
-        this.person = person;
+        this.cardBean = cardBean;
         this.eventBus = eventBus;
         this.drawConnectFunc = drawConnectFunc;
         this.delta_x = 0;
@@ -23,16 +22,154 @@ class PersonCard {
     }
 
     bind() {
-        this.openCardInfoForCreate = this.openCardInfoForCreate.bind(this);
-        this.openCardInfoForUpdate = this.openCardInfoForUpdate.bind(this);
         this.updateCardPosition = this.updateCardPosition.bind(this);
-        this.deleteCard = this.deleteCard.bind(this);
-        this.movePersonCard = this.movePersonCard.bind(this);
+        this.moveCard = this.moveCard.bind(this);
         this.saveXY = this.saveXY.bind(this);
         this.clearXY = this.clearXY.bind(this);
         this.init = this.init.bind(this);
-        this.updateCardData = this.updateCardData.bind(this);
 
+    }
+
+    init() {
+        this.initCardPanel();
+        this.initListener();
+    }
+
+    initCardPanel() {
+        this.cardPanel = document.createElement('div');
+        this.cardPanel.classList.add('cardPanel');
+        this.cardPanel.classList.add('noselect');
+        this.cardPanel.style.left = this.cardBean.posX + 'px';
+        this.cardPanel.style.top = this.cardBean.posY + 'px';
+    }
+
+
+    initListener() {
+        this.cardPanel.addEventListener('mousedown', this.saveXY);
+        document.addEventListener('mouseup', this.clearXY);
+    }
+
+
+    updateCardPosition() {
+        let json = JSON.stringify({id: this.cardBean.id, posX: this.cardBean.posX, posY: this.cardBean.posY});
+        RequestMappingUtils.post('/api/savePositions', json);
+    }
+
+
+    moveCard(event) {
+        if (event.which !== 1) return;
+        event.stopPropagation();
+        let x = event.pageX;
+        let y = event.pageY;
+
+        let new_x = this.delta_x + x / (1 / this.camera.position.z * this.teta);
+        let new_y = this.delta_y - y / (1 / this.camera.position.z * this.teta);
+        this.cardPanel.style.top = new_y + 'px';
+        this.cardPanel.style.left = new_x + 'px';
+
+        this.drawConnectFunc('update');
+    }
+
+    saveXY(event) {
+        if (event.which !== 1) return;
+        event.stopPropagation();
+        this.isActive = true;
+
+        let x = event.pageX;
+        let y = event.pageY;
+
+        let x_block = this.cardPanel.offsetLeft;
+        let y_block = this.cardPanel.offsetTop;
+
+        this.delta_x = x_block - x / (1 / this.camera.position.z * this.teta);
+        this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
+
+        document.addEventListener("mousemove", this.moveCard);
+
+    }
+
+    clearXY(event) {
+        if (event.which !== 1) return;
+        event.stopPropagation();
+        this.cardBean.posX = this.cardPanel.style.left.replace("px", "");
+        this.cardBean.posY = this.cardPanel.style.top.replace("px", "");
+
+
+        document.removeEventListener("mousemove", this.moveCard);
+
+        if (this.isActive) {
+            this.updateCardPosition();
+            this.eventBus.fireEvent("updateTarget", this.cardBean.id);
+        }
+        this.isActive = false;
+    }
+
+    getPosX() {
+        return parseInt(this.cardBean.posX);
+    }
+
+    getPosY() {
+        return parseInt(this.cardBean.posY);
+    }
+
+    setPosX(x) {
+        this.cardBean.posX = x;
+    }
+
+    setPosY(y) {
+        this.cardBean.posY = y;
+    }
+
+    getElement() {
+        return this.cardPanel;
+    }
+
+    getX() {
+        return parseInt(this.cardPanel.style.left.replace("px", ""));
+    }
+
+    getY() {
+        return parseInt(this.cardPanel.style.top.replace("px", ""));
+    }
+
+    getZ() {
+        return this.z;
+    }
+
+    setZ(z) {
+        this.z = z;
+    }
+
+    getWidth() {
+        return this.cardPanel.offsetWidth;
+    }
+
+    getHeight() {
+        return this.cardPanel.offsetHeight;
+    }
+
+    getParentId() {
+        return this.cardBean.parentId;
+    }
+
+    setParentId(id) {
+        this.cardBean.parentId = id;
+    }
+
+    getId() {
+        return this.cardBean.id;
+    }
+
+
+}
+
+class PersonCard extends Card {
+    bind() {
+        super.bind();
+        this.openCardInfoForCreate = this.openCardInfoForCreate.bind(this);
+        this.openCardInfoForUpdate = this.openCardInfoForUpdate.bind(this);
+        this.deleteCard = this.deleteCard.bind(this);
+        this.updateCardData = this.updateCardData.bind(this);
     }
 
     init() {
@@ -47,8 +184,8 @@ class PersonCard {
         this.cardPanel = document.createElement('div');
         this.cardPanel.classList.add('cardPanel');
         this.cardPanel.classList.add('noselect');
-        this.cardPanel.style.left = this.person.posX + 'px';
-        this.cardPanel.style.top = this.person.posY + 'px';
+        this.cardPanel.style.left = this.cardBean.posX + 'px';
+        this.cardPanel.style.top = this.cardBean.posY + 'px';
     }
 
     initPhotoBlock() {
@@ -84,10 +221,10 @@ class PersonCard {
 
 
     updateCardData() {
-        this.nameText.innerHTML = '<span>' + this.person.firstName + '</span>';
-        this.secondNameText.innerHTML = '<span>' + this.person.secondName + '</span>';
-        this.patronymicText.innerHTML = '<span>' + this.person.patronymic + '</span>';
-        this.ageText.innerHTML = '<span>' + this.person.age + '</span>';
+        this.nameText.innerHTML = '<span>' + this.cardBean.firstName + '</span>';
+        this.secondNameText.innerHTML = '<span>' + this.cardBean.secondName + '</span>';
+        this.patronymicText.innerHTML = '<span>' + this.cardBean.patronymic + '</span>';
+        this.ageText.innerHTML = '<span>' + this.cardBean.age + '</span>';
     }
 
     initButtonBlock() {
@@ -113,8 +250,8 @@ class PersonCard {
     }
 
     initListener() {
-        this.cardPanel.addEventListener('mousedown', this.saveXY);
-        document.addEventListener('mouseup', this.clearXY);
+        super.initListener();
+
         this.deleteButton.addEventListener('mousedown', this.deleteCard);
         this.settingButton.addEventListener('mousedown', this.openCardInfoForUpdate);
         this.addButton.addEventListener('mousedown', this.openCardInfoForCreate);
@@ -134,7 +271,7 @@ class PersonCard {
     }
 
     openCardInfoForCreate(event) {
-        if (event.which != 1) return;
+        if (event.which !== 1) return;
         event.stopPropagation();
 
         let theme = this.theme;
@@ -142,59 +279,61 @@ class PersonCard {
         let camera = this.camera;
         let drawConnectFunc = this.drawConnectFunc;
 
-        let x = parseInt(this.person.posX);
-        let y = parseInt(this.person.posY) - 150;
+        let x = parseInt(this.cardBean.posX);
+        let y = parseInt(this.cardBean.posY) - 150;
 
-        let newPerson = new BEAN.PersonBean(null, this.person.id, this.person.workspaceId, "",
-            this.person.secondName, "", "", "", "", x, y);
+        let newPerson = new BEAN.PersonBean(null, this.cardBean.id, this.cardBean.workspaceId, "",
+            this.cardBean.secondName, "", "", "", "", x, y);
 
         let cardInfo = new DIALOG.InfoCard(newPerson, function (person) {
             let json = JSON.stringify(person);
             RequestMappingUtils.postWithResponse('api/create', json, function (person) {
-                // person.id = person.id;
+
                 let object = new PersonCard(person, camera, eventBus, theme, drawConnectFunc);
-                window.parent.addObject(object);
+                eventBus.fireEvent("addObject", object);
+
             });
         });
     }
 
     openCardInfoForUpdate(event) {
-        if (event.which != 1) return;
+        if (event.which !== 1) return;
         event.stopPropagation();
-        let oldPerson = this.person;
+        let oldCardBean = this.cardBean;
         let updateCardData = this.updateCardData;
 
-        let cardInfo = new DIALOG.InfoCard(this.person, function (person) {
-            let json = JSON.stringify(person);
+        let cardInfo = new DIALOG.InfoCard(this.cardBean, function (card) {
+            let json = JSON.stringify(card);
             RequestMappingUtils.post('api/update', json);
 
-            oldPerson.name = person.firstName;
-            oldPerson.secondName = person.secondName;
-            oldPerson.patronymic = person.patronymic;
-            oldPerson.age = person.age;
-            oldPerson.email = person.email;
-            oldPerson.address = person.address;
+            oldCardBean.name = card.firstName;
+            oldCardBean.secondName = card.secondName;
+            oldCardBean.patronymic = card.patronymic;
+            oldCardBean.age = card.age;
+            oldCardBean.email = card.email;
+            oldCardBean.address = card.address;
 
             updateCardData();
         });
     }
 
-    updateCardPosition() {
-        let json = JSON.stringify({id: this.person.id, posX: this.person.posX, posY: this.person.posY});
-        RequestMappingUtils.post('/api/savePositions', json);
-    }
+    // updateCardPosition() {
+    //     let json = JSON.stringify({id: this.cardBean.id, posX: this.cardBean.posX, posY: this.cardBean.posY});
+    //     RequestMappingUtils.post('/api/savePositions', json);
+    // }
 
     deleteCard(event) {
-        if (event.which != 1) return;
+        if (event.which !== 1) return;
         event.stopPropagation();
-        let id = this.person.id;
-        let parentId = this.person.parentId;
+        let id = this.cardBean.id;
+        let parentId = this.cardBean.parentId;
+        let eventBus = this.eventBus;
 
         function createDelDialog() {
             let dialog = new DIALOG.InfoDialog("Вы действительно хотите удалить карточку?", ENUM.DialogType.OkNo, function () {
                 let json = JSON.stringify({id: id});
                 RequestMappingUtils.postWithResponse('api/delete', json, function (people) {
-                    window.parent.delObjects(people);
+                    eventBus.fireEvent("removeObjects", people);
                 });
             });
         }
@@ -204,7 +343,7 @@ class PersonCard {
                 function () {
                     let json = JSON.stringify({id: id});
                     RequestMappingUtils.postWithResponse('api/delete', json, function (people) {
-                        window.parent.delObjects(people);
+                        eventBus.fireEvent("removeObjects", people);
                     });
                 },
                 function () {
@@ -212,8 +351,9 @@ class PersonCard {
                     RequestMappingUtils.postWithResponse('api/deleteParent', json, function (deleteParentResponse) {
                         let parent = [deleteParentResponse.parent];
                         let children = deleteParentResponse.children;
-                        window.parent.updateObjectParent(parent, children);
-                        window.parent.delObjects(parent);
+                        //       window.parent.updateObjectParent(parent, children);
+                        eventBus.fireEvent("updateObjectParent", {parent: parent, children: children});
+                        eventBus.fireEvent("removeObjects", parent);
                     });
                 });
             dialog.setCancelButtonText('Выше');
@@ -222,159 +362,43 @@ class PersonCard {
 
         RequestMappingUtils.get('/api/childrenCount?' + new URLSearchParams({personId: id}), function (response) {
             let childrenCount = parseInt(response.id);
-            if (childrenCount == 1) {
+            if (childrenCount === 1) {
                 createDelDialog();
             } else {
                 createDelAllOrReplaceChildrenDialog();
             }
         });
     }
-
-
-    movePersonCard(event) {
-        if (event.which != 1) return;
-        event.stopPropagation();
-        let x = event.pageX;
-        let y = event.pageY;
-
-        let new_x = this.delta_x + x / (1 / this.camera.position.z * this.teta);
-        let new_y = this.delta_y - y / (1 / this.camera.position.z * this.teta);
-        this.cardPanel.style.top = new_y + 'px';
-        this.cardPanel.style.left = new_x + 'px';
-
-        this.drawConnectFunc('update');
-    }
-
-    saveXY(event) {
-        if (event.which != 1) return;
-        event.stopPropagation();
-        this.isActive = true;
-
-        var x = event.pageX;
-        var y = event.pageY;
-
-        let x_block = this.cardPanel.offsetLeft;
-        let y_block = this.cardPanel.offsetTop;
-
-        this.delta_x = x_block - x / (1 / this.camera.position.z * this.teta);
-        this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
-
-        document.addEventListener("mousemove", this.movePersonCard);
-
-    }
-
-    clearXY(event) {
-        if (event.which != 1) return;
-        event.stopPropagation();
-        this.person.posX = this.cardPanel.style.left.replace("px", "");
-        this.person.posY = this.cardPanel.style.top.replace("px", "");
-
-
-        document.removeEventListener("mousemove", this.movePersonCard);
-
-        if (this.isActive) {
-            this.updateCardPosition();
-            window.parent.updateTarget(this.person.id);
-        }
-        this.isActive = false;
-    }
-
-    getPosX() {
-        return parseInt(this.person.posX);
-    }
-
-    getPosY() {
-        return parseInt(this.person.posY);
-    }
-
-    getElement() {
-        return this.cardPanel;
-    }
-
-    getX() {
-        return parseInt(this.cardPanel.style.left.replace("px", ""));
-    }
-
-    getY() {
-        return parseInt(this.cardPanel.style.top.replace("px", ""));
-    }
-
-    getZ() {
-        return this.z;
-    }
-
-    setZ(z) {
-        this.z = z;
-    }
-
-    getWidth() {
-        return this.cardPanel.offsetWidth;
-    }
-
-    getHeight() {
-        return this.cardPanel.offsetHeight;
-    }
-
-    getParentId() {
-        return this.person.parentId;
-    }
-
-    setParentId(id) {
-        this.person.parentId = id;
-    }
-
-    getId() {
-        return this.person.id;
-    }
-
-
 }
 
+class AuthCard extends Card {
+    constructor(cardBean, camera, eventBus, theme, drawConnectFunc, nextStepFunc) {
+        super(cardBean, camera, eventBus, theme, drawConnectFunc);
 
-class AuthCard {
-    constructor(authBean, camera, eventBus, theme, drawConnectFunc, nextStepFunc) {
-        this.camera = camera;
-        this.authBean = authBean;
-        this.eventBus = eventBus;
-        this.drawConnectFunc = drawConnectFunc;
         this.nextStepFunc = nextStepFunc;
-        this.delta_x = 0;
-        this.delta_y = 0;
-        this.isActive = false;
-        this.z = 0;
-        this.theme = theme;
         this.expanded = false;
         this.valid = false;
-        this.bind();
-        this.init();
-
-        this.teta = 1290; /*1750*/
-
     }
 
     bind() {
-        this.moveAuthCard = this.moveAuthCard.bind(this);
-        this.saveXY = this.saveXY.bind(this);
-        this.clearXY = this.clearXY.bind(this);
-        this.init = this.init.bind(this);
+        super.bind();
         this.updateCardData = this.updateCardData.bind(this);
         this.doOnClick = this.doOnClick.bind(this);
         this.doOnClickAfterExpand = this.doOnClickAfterExpand.bind(this);
         this.expand = this.expand.bind(this);
         this.doOnTypeText = this.doOnTypeText.bind(this);
-
     }
 
     init() {
         this.initCardPanel();
-        if (this.authBean.authType === ENUM.AuthType.input) {
+        if (this.cardBean.authType === ENUM.AuthType.input) {
             this.initInputBlock();
         }
-        if (this.authBean.authType === ENUM.AuthType.button) {
+        if (this.cardBean.authType === ENUM.AuthType.button) {
             this.initButtonBlock();
         }
-        if (this.authBean.authType === ENUM.AuthType.collapsedInput
-            || this.authBean.authType === ENUM.AuthType.collapsedButton) {
+        if (this.cardBean.authType === ENUM.AuthType.collapsedInput
+            || this.cardBean.authType === ENUM.AuthType.collapsedButton) {
             this.initCollapsedInputBlock();
         }
         this.initListener();
@@ -384,9 +408,9 @@ class AuthCard {
         this.cardPanel = document.createElement('div');
         this.cardPanel.classList.add('loginPanel');
         this.cardPanel.classList.add('noselect');
-        this.cardPanel.style.width = this.authBean.width + 'px';
-        this.cardPanel.style.left = this.authBean.posX + 'px';
-        this.cardPanel.style.top = this.authBean.posY + 'px';
+        this.cardPanel.style.width = this.cardBean.width + 'px';
+        this.cardPanel.style.left = this.cardBean.posX + 'px';
+        this.cardPanel.style.top = this.cardBean.posY + 'px';
     }
 
     initInputBlock() {
@@ -418,7 +442,7 @@ class AuthCard {
     }
 
     updateCardData() {
-        this.caption.innerHTML = '<span>' + this.authBean.caption + '</span>';
+        this.caption.innerHTML = '<span>' + this.cardBean.caption + '</span>';
     }
 
     initButtonBlock() {
@@ -428,34 +452,29 @@ class AuthCard {
 
         this.buttonText = document.createElement('span');
         this.buttonText.classList.add('loginButtonText');
-        this.buttonText.innerHTML = this.authBean.caption;
+        this.buttonText.innerHTML = this.cardBean.caption;
         this.button.appendChild(this.buttonText);
 
 
     }
 
     initListener() {
-        // this.cardPanel.addEventListener('mousedown', this.saveXY);
-        // document.addEventListener('mouseup', this.clearXY);
-        if (this.authBean.authType === ENUM.AuthType.button) {
+
+        if (this.cardBean.authType === ENUM.AuthType.button) {
             this.button.addEventListener('mousedown', this.doOnClick);
         }
-        if (this.authBean.authType === ENUM.AuthType.collapsedInput
-            || this.authBean.authType === ENUM.AuthType.collapsedButton) {
+        if (this.cardBean.authType === ENUM.AuthType.collapsedInput
+            || this.cardBean.authType === ENUM.AuthType.collapsedButton) {
             this.button.addEventListener('mousedown', this.doOnClickAfterExpand);
         }
         if (this.value) {
             this.value.addEventListener('keyup', this.doOnTypeText);
         }
 
-        let button = this.button;
         let theme = this.theme;
 
         this.eventBus.addEventListener("changeTheme", function (data) {
             theme = data;
-            //            if (this.authBean.authType !== ENUM.AuthType.input) {
-            // //               button.setAttribute('src', 'images/' + data.getName() + '/info.svg');
-            //            }
         });
 
     }
@@ -470,11 +489,11 @@ class AuthCard {
 
     doOnClickAfterExpand() {
         this.expand();
-        if (this.authBean.authType === ENUM.AuthType.collapsedInput) {
+        if (this.cardBean.authType === ENUM.AuthType.collapsedInput) {
             this.initInputBlock();
             this.nextStepFunc();
         }
-        if (this.authBean.authType === ENUM.AuthType.collapsedButton) {
+        if (this.cardBean.authType === ENUM.AuthType.collapsedButton) {
             this.initButtonBlock();
             this.nextStepFunc(this.expanded);
             this.expanded = true;
@@ -484,108 +503,12 @@ class AuthCard {
 
     expand() {
         this.cardPanel.style.transition = 'width 1s ease-in-out';
-        this.cardPanel.style.width = this.authBean.width + 'px';
+        this.cardPanel.style.width = this.cardBean.width + 'px';
         this.cardPanel.removeChild(this.button);
-    }
-
-    moveAuthCard(event) {
-        if (event.which != 1) return;
-        event.stopPropagation();
-        var x = event.pageX;
-        var y = event.pageY;
-
-        let new_x = this.delta_x + x / (1 / this.camera.position.z * this.teta);
-        let new_y = this.delta_y - y / (1 / this.camera.position.z * this.teta);
-        this.cardPanel.style.top = new_y + 'px';
-        this.cardPanel.style.left = new_x + 'px';
-
-        this.drawConnectFunc('update');
-    }
-
-    saveXY(event) {
-        if (event.which != 1) return;
-        event.stopPropagation();
-        this.isActive = true;
-
-        var x = event.pageX;
-        var y = event.pageY;
-
-        let x_block = this.cardPanel.offsetLeft;
-        let y_block = this.cardPanel.offsetTop;
-
-        this.delta_x = x_block - x / (1 / this.camera.position.z * this.teta);
-        this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
-
-        document.addEventListener("mousemove", this.moveAuthCard);
-
-    }
-
-    clearXY(event) {
-        if (event.which != 1) return;
-        event.stopPropagation();
-        this.authBean.posX = this.cardPanel.style.left.replace("px", "");
-        this.authBean.posY = this.cardPanel.style.top.replace("px", "");
-
-
-        document.removeEventListener("mousemove", this.moveAuthCard);
-
-        if (this.isActive) {
-//	      window.parent.updateTarget(this.person.id);
-        }
-        this.isActive = false;
-    }
-
-    getPosX() {
-        return parseInt(this.authBean.posX);
-    }
-
-    getPosY() {
-        return parseInt(this.authBean.posY);
-    }
-
-    getElement() {
-        return this.cardPanel;
-    }
-
-    getX() {
-        return parseInt(this.cardPanel.style.left.replace("px", ""));
-    }
-
-    getY() {
-        let y = parseInt(this.cardPanel.style.top.replace("px", ""));
-        return y;
-    }
-
-    getZ() {
-        return this.z;
-    }
-
-    setZ(z) {
-        this.z = z;
-    }
-
-    getWidth() {
-        return this.cardPanel.offsetWidth;
-    }
-
-    getHeight() {
-        return this.cardPanel.offsetHeight;
-    }
-
-    getParentId() {
-        return this.authBean.parentId;
-    }
-
-    setParentId(id) {
-        this.authBean.parentId = id;
     }
 
     getValue() {
         return this.value !== null ? this.value.value : "";
-    }
-
-    getId() {
-        return this.authBean.id;
     }
 
     setPos(x, y) {
@@ -612,4 +535,80 @@ class AuthCard {
     }
 }
 
-export {PersonCard, AuthCard};
+class InfoCard extends Card {
+    constructor(cardBean, camera, eventBus, theme, drawConnectFunc, nextStepFunc) {
+        super(cardBean, camera, eventBus, theme, drawConnectFunc);
+        this.nextStepFunc = nextStepFunc;
+    }
+
+    bind() {
+        super.bind();
+        this.updateCardData = this.updateCardData.bind(this);
+        this.doOnClick = this.doOnClick.bind(this);
+    }
+
+    init() {
+        this.initCardPanel();
+        this.initInfoBlock();
+        this.initListener();
+    }
+
+    initCardPanel() {
+
+        this.cardPanel = document.createElement('fieldSet');
+        this.cardPanel.classList.add('InfoCardPanel');
+        this.cardPanel.classList.add('noselect');
+        this.cardPanel.style.width = this.cardBean.width + 'px';
+        this.cardPanel.style.left = this.cardBean.posX + 'px';
+        this.cardPanel.style.top = this.cardBean.posY + 'px';
+
+
+        let legend = document.createElement('legend');
+        legend.classList.add('mainMenuThemePanelLegend');
+        legend.innerHTML = this.cardBean.caption;
+        this.cardPanel.appendChild(legend);
+    }
+
+    initInfoBlock() {
+        this.caption = document.createElement('div');
+        this.caption.classList.add('loginLabel');
+        this.cardPanel.appendChild(this.caption);
+
+        this.button = document.createElement('div');
+        this.button.classList.add('infoCardPanelButton');
+        this.cardPanel.appendChild(this.button);
+
+        this.buttonText = document.createElement('div');
+        this.buttonText.classList.add('loginButtonText');
+        this.buttonText.innerHTML = '&times;';
+        this.button.appendChild(this.buttonText);
+
+        this.updateCardData();
+    }
+
+    updateCardData() {
+        this.caption.innerHTML = '<span>' + this.cardBean.value + '</span>';
+    }
+
+    initListener() {
+        super.initListener();
+        this.button.addEventListener('mousedown', this.doOnClick);
+        let theme = this.theme;
+        this.eventBus.addEventListener("changeTheme", function (data) {
+            theme = data;
+        });
+
+    }
+
+    doOnClick() {
+        this.nextStepFunc();
+    }
+
+    setPos(x, y) {
+        this.cardPanel.style.left = x + 'px';
+        this.cardPanel.style.top = y + 'px';
+    }
+
+}
+
+export {PersonCard, AuthCard, InfoCard};

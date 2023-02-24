@@ -41,4 +41,17 @@ class AuthType {
         return this.name;
     }
 }
-export {DialogType, ThemeType, AuthType};
+
+class InfoType {
+    static info = new InfoType("info");
+    static error = new InfoType("error");
+
+    constructor(name) {
+        this.name = name
+    }
+
+    getName() {
+        return this.name;
+    }
+}
+export {DialogType, ThemeType, AuthType, InfoType};

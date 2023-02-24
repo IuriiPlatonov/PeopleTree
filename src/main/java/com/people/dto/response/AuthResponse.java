@@ -13,5 +13,6 @@ public class AuthResponse {
 
     private boolean isAuthorized;
     private String userId;
+    private String username;
 
 }

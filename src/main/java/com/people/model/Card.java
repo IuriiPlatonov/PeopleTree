@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-public class Person {
+public class Card {
 	private String id;
 	private String workspaceId;
 	private String parentId;
