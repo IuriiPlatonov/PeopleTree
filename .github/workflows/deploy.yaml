@@ -16,7 +16,7 @@ jobs:
       - run: echo "${{ secrets.key }}" > "$HOME/.ssh/DEPLOY"
       - run: chmod 600 "$HOME/.ssh/DEPLOY"
       # Build
-      - run: npm ci
-      - run: npm run build
+      - name: Maven Package
+        run: mvn -B clean install package -DskipTests --file pom.xml
       # Deploy
       - run: cd app && rsync -e "ssh -p 20022 -i $HOME/.ssh/DEPLOY -o StrictHostKeyChecking=no" --archive --compress --delete . root@91.238.99.217:/home/
