@@ -46,7 +46,9 @@ class Card {
 
     initListener() {
         this.cardPanel.addEventListener('mousedown', this.saveXY);
+        this.cardPanel.addEventListener('touchstart', this.saveXY);
         document.addEventListener('mouseup', this.clearXY);
+        document.addEventListener('touchend', this.clearXY);
     }
 
 
@@ -85,6 +87,7 @@ class Card {
         this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
 
         document.addEventListener("mousemove", this.moveCard);
+        document.addEventListener("touchmove", this.moveCard);
 
     }
 
@@ -94,7 +97,7 @@ class Card {
         this.cardBean.posX = this.cardPanel.style.left.replace("px", "");
         this.cardBean.posY = this.cardPanel.style.top.replace("px", "");
 
-
+        document.removeEventListener("touchmove", this.moveCard);
         document.removeEventListener("mousemove", this.moveCard);
 
         if (this.isActive) {
