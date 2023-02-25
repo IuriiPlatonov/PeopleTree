@@ -379,26 +379,26 @@ function createInfoObject(parentId, caption, message, x, y, height) {
  */
 function createLoginObjects() {
 
-    let loginBean = new BEAN.AuthBean(UUID.generate(), null, "Логин", "", 0, 0, 210, ENUM.AuthType.input);
+    let loginBean = new BEAN.AuthBean(UUID.generate(), null, "Логин", "", -50, 0, 210, ENUM.AuthType.input);
     let loginObject = new OBJECT.AuthCard(loginBean, camera, eventBus, menu.theme, redrawConnections, function () {
     });
 
 
-    let passBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Пароль", "", 0, -100, 210, ENUM.AuthType.input);
+    let passBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Пароль", "", -50, -100, 210, ENUM.AuthType.input);
     let passObject = new OBJECT.AuthCard(passBean, camera, eventBus, menu.theme, redrawConnections, function () {
     });
 
-    let createAccBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Регистрация", "", 300, 50, 210, ENUM.AuthType.button);
+    let createAccBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Регистрация", "", 250, 50, 210, ENUM.AuthType.button);
     let createAccObject = new OBJECT.AuthCard(createAccBean, camera, eventBus, menu.theme, redrawConnections, function () {
         removeObjects(new Map(objects));
         createRegisterObjects()
     });
 
-    let recoverPassBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Восстановить пароль", "", 320, -50, 210, ENUM.AuthType.button);
+    let recoverPassBean = new BEAN.AuthBean(UUID.generate(), loginObject.getId(), "Восстановить пароль", "", 270, -50, 210, ENUM.AuthType.button);
     let recoverPassObject = new OBJECT.AuthCard(recoverPassBean, camera, eventBus, menu.theme, redrawConnections, function () {
     });
 
-    let enterBean = new BEAN.AuthBean(UUID.generate(), passObject.getId(), "Войти", "", 0, -200, 210, ENUM.AuthType.button);
+    let enterBean = new BEAN.AuthBean(UUID.generate(), passObject.getId(), "Войти", "", -50, -200, 210, ENUM.AuthType.button);
     let enterObject = new OBJECT.AuthCard(enterBean, camera, eventBus, menu.theme, redrawConnections, function () {
         let json = JSON.stringify({email: loginObject.getValue(), password: passObject.getValue()});
         RequestMappingUtils.postWithResponse(authUrl, json, function (response) {

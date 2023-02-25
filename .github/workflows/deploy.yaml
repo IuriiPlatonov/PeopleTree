@@ -1,0 +1,22 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Setup key
+      - run: set -eu
+      - run: mkdir "$HOME/.ssh"
+      - run: echo "${{ secrets.key }}" > "$HOME/.ssh/DEPLOY"
+      - run: chmod 600 "$HOME/.ssh/DEPLOY"
+      # Build
+      - run: npm ci
+      - run: npm run build
+      # Deploy
+      - run: cd app && rsync -e "ssh -p 20022 -i $HOME/.ssh/DEPLOY -o StrictHostKeyChecking=no" --archive --compress --delete . root@91.238.99.217:/home/
