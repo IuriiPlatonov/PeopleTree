@@ -24,4 +24,4 @@ jobs:
         run: mvn -B clean install package -DskipTests --file pom.xml
       # Deploy
       - run: rsync -e "ssh -p 22 -i $HOME/.ssh/DEPLOY -o StrictHostKeyChecking=no" --archive --compress --delete . root@91.238.99.217:/home/
-      - run: root@91.238.99.217 "sudo systemctl restart CardService.service"
+      - run: ssh root@91.238.99.217 "sudo systemctl restart CardService.service"
