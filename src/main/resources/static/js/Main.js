@@ -41,7 +41,7 @@ function initScene() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    controls = new TrackballControls(camera, renderer.domElement);
+    controls = new TrackballControls(camera, renderer.domElement, eventBus);
     controls.minDistance = 100;
     controls.maxDistance = 6000;
     //  controls.addEventListener('change', render);

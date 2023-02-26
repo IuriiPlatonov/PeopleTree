@@ -20,7 +20,7 @@ class Card {
         this.init();
         let fi = window.outerHeight / window.outerWidth;
         this.teta = 1320 * (fi < 1 ? 1 : fi); /*1750 : 1290*/
-
+        this.canMove = true;
     }
 
     bind() {
@@ -50,6 +50,9 @@ class Card {
         this.cardPanel.addEventListener('pointerdown', this.saveXY);
         document.addEventListener('pointerup', this.clearXY);
         document.removeEventListener('pointercancel', this.removePointer);
+        this.eventBus.addEventListener("canMoveCard", function (data) {
+            this.canMove = data;
+        });
     }
 
 
@@ -60,7 +63,7 @@ class Card {
 
     moveCard(event) {
         if (event.pointerType === 'mouse'
-            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary) {
+            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary && this.canMove) {
             event.preventDefault();
             event.stopPropagation();
             let x = event.pageX;
@@ -92,7 +95,7 @@ class Card {
         this.addPointer(event);
 
         if (event.pointerType === 'mouse' && event.button === 0
-            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary) {
+            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary && this.canMove) {
             event.preventDefault();
             event.stopPropagation();
             this.isActive = true;
@@ -106,8 +109,6 @@ class Card {
             this.delta_x = x_block - x / (1 / this.camera.position.z * this.teta);
             this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
 
-            let doc = document;
-            let win = window;
             document.addEventListener("pointermove", this.moveCard);
         }
     }
@@ -115,7 +116,7 @@ class Card {
     clearXY(event) {
         this.removePointer(event);
         if (event.pointerType === 'mouse' && event.button === 0
-            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary) {
+            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary && this.canMove) {
             event.preventDefault();
             event.stopPropagation();
             this.cardBean.posX = this.cardPanel.style.left.replace("px", "");

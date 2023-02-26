@@ -6,7 +6,7 @@ const _endEvent = {type: 'end'};
 
 class TrackballControls extends EventDispatcher {
 
-    constructor(object, domElement) {
+    constructor(object, domElement, eventBus) {
 
         super();
 
@@ -16,7 +16,7 @@ class TrackballControls extends EventDispatcher {
         this.object = object;
         this.domElement = domElement;
         this.domElement.style.touchAction = 'none'; // disable touch scroll
-
+        this.eventBus = eventBus;
         // API
 
         this.enabled = true;
@@ -621,11 +621,8 @@ class TrackballControls extends EventDispatcher {
         }
 
         function onTouchStart(event) {
-
             trackPointer(event);
-
             switch (_pointers.length) {
-
                 case 1:
                     _state = STATE.TOUCH_ROTATE;
                     _moveCurr.copy(getMouseOnCircle(_pointers[0].pageX, _pointers[0].pageY));
@@ -637,8 +634,8 @@ class TrackballControls extends EventDispatcher {
                     _panStart.copy(getMouseOnScreen(x, y));
                     _panEnd.copy(_panStart);
                     break;
-
                 default: // 2 or more
+                    eventBus.fireEvent("canMoveCard", false);
                     _state = STATE.TOUCH_ZOOM_PAN;
                     const dx = _pointers[0].pageX - _pointers[1].pageX;
                     const dy = _pointers[0].pageY - _pointers[1].pageY;
@@ -699,6 +696,7 @@ class TrackballControls extends EventDispatcher {
                     break;
 
                 case 2:
+                    eventBus.fireEvent("canMoveCard", true);
                     _state = STATE.TOUCH_ZOOM_PAN;
 
                     for (let i = 0; i < _pointers.length; i++) {
