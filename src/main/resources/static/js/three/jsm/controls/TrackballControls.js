@@ -38,7 +38,7 @@ class TrackballControls extends EventDispatcher {
         this.maxDistance = Infinity;
 
         this.keys = ['KeyA' /*A*/, 'KeyS' /*S*/, 'KeyD' /*D*/];
-        let isCardMove = true;
+        let isCardMove = false;
         this.mouseButtons = {LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN};
 
         // internals
@@ -623,11 +623,11 @@ class TrackballControls extends EventDispatcher {
                     const y = event.pageY;
                     _panStart.copy(getMouseOnScreen(x, y));
                     _panEnd.copy(_panStart);
-                    eventBus.fireEvent("canMoveCard", {isMove: false});
+
                     break;
                 default: // 2 or more
 
-
+                    // eventBus.fireEvent("canMoveCard", {isMove: false});
                     _state = STATE.TOUCH_ZOOM_PAN;
                     const dx = _pointers[0].pageX - _pointers[1].pageX;
                     const dy = _pointers[0].pageY - _pointers[1].pageY;
@@ -685,13 +685,13 @@ class TrackballControls extends EventDispatcher {
                     // _state = STATE.TOUCH_ROTATE;
                     // _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
                     // _movePrev.copy(_moveCurr);
-                    eventBus.fireEvent("canMoveCard", {isMove: true});
+
                     break;
 
                 case 2:
 
                     _state = STATE.TOUCH_ZOOM_PAN;
-
+                    // eventBus.fireEvent("canMoveCard", {isMove: true});
                     for (let i = 0; i < _pointers.length; i++) {
 
                         if (_pointers[i].pointerId !== event.pointerId) {
