@@ -109,7 +109,7 @@ class Card {
 
             this.delta_x = x_block - x / (1 / this.camera.position.z * this.teta);
             this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
-
+            this.eventBus.fireEvent("canMoveCard", {isMove: false});
             document.addEventListener("pointermove", this.moveCard);
         }
     }
@@ -122,7 +122,7 @@ class Card {
             event.stopPropagation();
             this.cardBean.posX = this.cardPanel.style.left.replace("px", "");
             this.cardBean.posY = this.cardPanel.style.top.replace("px", "");
-
+            this.eventBus.fireEvent("canMoveCard", {isMove: true});
 
             document.removeEventListener("pointermove", this.moveCard);
 

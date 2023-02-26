@@ -38,7 +38,7 @@ class TrackballControls extends EventDispatcher {
         this.maxDistance = Infinity;
 
         this.keys = ['KeyA' /*A*/, 'KeyS' /*S*/, 'KeyD' /*D*/];
-
+        let canMove = true;
         this.mouseButtons = {LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN};
 
         // internals
@@ -636,14 +636,15 @@ class TrackballControls extends EventDispatcher {
 
                     break;
                 default: // 2 or more
-                    eventBus.fireEvent("canMoveCard", {isMove: false});
-                    _state = STATE.TOUCH_ZOOM_PAN;
-                    const dx = _pointers[0].pageX - _pointers[1].pageX;
-                    const dy = _pointers[0].pageY - _pointers[1].pageY;
-                    _touchZoomDistanceEnd = _touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
+                    if (canMove) {
+                        eventBus.fireEvent("canMoveCard", {isMove: false});
+                        _state = STATE.TOUCH_ZOOM_PAN;
+                        const dx = _pointers[0].pageX - _pointers[1].pageX;
+                        const dy = _pointers[0].pageY - _pointers[1].pageY;
+                        _touchZoomDistanceEnd = _touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
 
-                    /** Поменял тут отсюда!*/
-
+                        /** Поменял тут отсюда!*/
+                    }
                     break;
 
             }
@@ -668,14 +669,14 @@ class TrackballControls extends EventDispatcher {
                     break;
 
                 default: // 2 or more
+                    if (canMove) {
+                        const position = getSecondPointerPosition(event);
 
-                    const position = getSecondPointerPosition(event);
+                        const dx = event.pageX - position.x;
+                        const dy = event.pageY - position.y;
+                        _touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy);
 
-                    const dx = event.pageX - position.x;
-                    const dy = event.pageY - position.y;
-                    _touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy);
-
-
+                    }
                     break;
 
             }
@@ -694,28 +695,26 @@ class TrackballControls extends EventDispatcher {
                     _state = STATE.TOUCH_ROTATE;
                     _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
                     _movePrev.copy(_moveCurr);
-
                     break;
 
                 case 2:
-                    eventBus.fireEvent("canMoveCard", {isMove: true});
-                    _state = STATE.TOUCH_ZOOM_PAN;
+                    if (canMove) {
+                        eventBus.fireEvent("canMoveCard", {isMove: true});
+                        _state = STATE.TOUCH_ZOOM_PAN;
 
-                    for (let i = 0; i < _pointers.length; i++) {
+                        for (let i = 0; i < _pointers.length; i++) {
 
-                        if (_pointers[i].pointerId !== event.pointerId) {
+                            if (_pointers[i].pointerId !== event.pointerId) {
 
-                            const position = _pointerPositions[_pointers[i].pointerId];
-                            _moveCurr.copy(getMouseOnCircle(position.x, position.y));
-                            _movePrev.copy(_moveCurr);
-                            break;
+                                const position = _pointerPositions[_pointers[i].pointerId];
+                                _moveCurr.copy(getMouseOnCircle(position.x, position.y));
+                                _movePrev.copy(_moveCurr);
+                                break;
 
+                            }
                         }
-
                     }
-
                     break;
-
             }
 
             scope.dispatchEvent(_endEvent);
@@ -797,7 +796,9 @@ class TrackballControls extends EventDispatcher {
         this.domElement.addEventListener('pointerdown', onPointerDown);
         this.domElement.addEventListener('pointercancel', onPointerCancel);
         this.domElement.addEventListener('wheel', onMouseWheel, {passive: false});
-
+        this.eventBus.addEventListener("canMoveCard", function (data) {
+            canMove = data.isMove;
+        });
 
         window.addEventListener('keydown', keydown);
         window.addEventListener('keyup', keyup);
