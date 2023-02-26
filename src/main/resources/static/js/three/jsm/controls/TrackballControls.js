@@ -399,7 +399,7 @@ class TrackballControls extends EventDispatcher {
 
         function onPointerDown(event) {
 
-            if (scope.enabled === false) return;
+            if (scope.enabled === false && !canMove) return;
 
             if (_pointers.length === 0) {
 
@@ -415,48 +415,37 @@ class TrackballControls extends EventDispatcher {
             addPointer(event);
 
             if (event.pointerType === 'touch') {
-
                 onTouchStart(event);
-
-            } else {
-
+            }
+            if (event.pointerType === 'mouse') {
                 onMouseDown(event);
-
             }
 
         }
 
         function onPointerMove(event) {
 
-            if (scope.enabled === false) return;
+            if (scope.enabled === false && !canMove) return;
 
             if (event.pointerType === 'touch') {
-
                 onTouchMove(event);
-
-            } else {
-
+            }
+            if (event.pointerType === 'mouse') {
                 onMouseMove(event);
-
             }
 
         }
 
         function onPointerUp(event) {
-
-            if (scope.enabled === false) return;
+            if (scope.enabled === false && !canMove) return;
 
             if (event.pointerType === 'touch') {
-
                 onTouchEnd(event);
-
-            } else {
-
-                onMouseUp();
-
             }
 
-            //
+            if (event.pointerType === 'mouse') {
+                onMouseUp();
+            }
 
             removePointer(event);
 
@@ -621,6 +610,7 @@ class TrackballControls extends EventDispatcher {
         }
 
         function onTouchStart(event) {
+
             trackPointer(event);
             switch (_pointers.length) {
                 case 1:
@@ -636,18 +626,19 @@ class TrackballControls extends EventDispatcher {
 
                     break;
                 default: // 2 or more
-                    if (canMove) {
-                        eventBus.fireEvent("canMoveCard", {isMove: false});
-                        _state = STATE.TOUCH_ZOOM_PAN;
-                        const dx = _pointers[0].pageX - _pointers[1].pageX;
-                        const dy = _pointers[0].pageY - _pointers[1].pageY;
-                        _touchZoomDistanceEnd = _touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
 
-                        /** Поменял тут отсюда!*/
-                    }
+                    eventBus.fireEvent("canMoveCard", {isMove: false});
+                    _state = STATE.TOUCH_ZOOM_PAN;
+                    const dx = _pointers[0].pageX - _pointers[1].pageX;
+                    const dy = _pointers[0].pageY - _pointers[1].pageY;
+                    _touchZoomDistanceEnd = _touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
+
+                    /** Поменял тут отсюда!*/
+
                     break;
 
             }
+
 
             scope.dispatchEvent(_startEvent);
 
@@ -669,14 +660,12 @@ class TrackballControls extends EventDispatcher {
                     break;
 
                 default: // 2 or more
-                    if (canMove) {
-                        const position = getSecondPointerPosition(event);
+                    const position = getSecondPointerPosition(event);
 
-                        const dx = event.pageX - position.x;
-                        const dy = event.pageY - position.y;
-                        _touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy);
+                    const dx = event.pageX - position.x;
+                    const dy = event.pageY - position.y;
+                    _touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy);
 
-                    }
                     break;
 
             }
@@ -698,20 +687,16 @@ class TrackballControls extends EventDispatcher {
                     break;
 
                 case 2:
-                    if (canMove) {
-                        eventBus.fireEvent("canMoveCard", {isMove: true});
-                        _state = STATE.TOUCH_ZOOM_PAN;
+                    eventBus.fireEvent("canMoveCard", {isMove: true});
+                    _state = STATE.TOUCH_ZOOM_PAN;
 
-                        for (let i = 0; i < _pointers.length; i++) {
+                    for (let i = 0; i < _pointers.length; i++) {
 
-                            if (_pointers[i].pointerId !== event.pointerId) {
-
-                                const position = _pointerPositions[_pointers[i].pointerId];
-                                _moveCurr.copy(getMouseOnCircle(position.x, position.y));
-                                _movePrev.copy(_moveCurr);
-                                break;
-
-                            }
+                        if (_pointers[i].pointerId !== event.pointerId) {
+                            const position = _pointerPositions[_pointers[i].pointerId];
+                            _moveCurr.copy(getMouseOnCircle(position.x, position.y));
+                            _movePrev.copy(_moveCurr);
+                            break;
                         }
                     }
                     break;
