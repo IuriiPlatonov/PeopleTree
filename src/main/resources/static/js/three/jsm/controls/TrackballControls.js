@@ -619,8 +619,8 @@ class TrackballControls extends EventDispatcher {
                     _movePrev.copy(_moveCurr);
 
                     /** Поменял сюда!*/
-                    const x = _pointers[0].pageX;
-                    const y = _pointers[0].pageY;
+                    const x = event.pageX;
+                    const y = event.pageY;
                     _panStart.copy(getMouseOnScreen(x, y));
                     _panEnd.copy(_panStart);
 
@@ -651,8 +651,8 @@ class TrackballControls extends EventDispatcher {
             switch (_pointers.length) {
 
                 case 1:
-                    _movePrev.copy(_moveCurr);
-                    _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
+                    // _movePrev.copy(_moveCurr);
+                    // _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
 
                     const x = event.pageX;
                     const y = event.pageY;
@@ -690,15 +690,15 @@ class TrackballControls extends EventDispatcher {
                     eventBus.fireEvent("canMoveCard", {isMove: true});
                     _state = STATE.TOUCH_ZOOM_PAN;
 
-                    for (let i = 0; i < _pointers.length; i++) {
-
-                        if (_pointers[i].pointerId !== event.pointerId) {
-                            const position = _pointerPositions[_pointers[i].pointerId];
-                            _moveCurr.copy(getMouseOnCircle(position.x, position.y));
-                            _movePrev.copy(_moveCurr);
-                            break;
-                        }
-                    }
+                    // for (let i = 0; i < _pointers.length; i++) {
+                    //
+                    //     if (_pointers[i].pointerId !== event.pointerId) {
+                    //         const position = _pointerPositions[_pointers[i].pointerId];
+                    //         _moveCurr.copy(getMouseOnCircle(position.x, position.y));
+                    //         _movePrev.copy(_moveCurr);
+                    //         break;
+                    //     }
+                    // }
                     break;
             }
 
