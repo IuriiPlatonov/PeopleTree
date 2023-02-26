@@ -76,8 +76,8 @@ class Card {
             this.drawConnectFunc('update');
         }
         if (event instanceof TouchEvent) {
-            if (event.changedTouches.length === 1) {
-                let touch = event.changedTouches.item(0)
+            if (event.touches.length === 1) {
+                let touch = event.touches.item(0);
                 let x = touch.pageX;
                 let y = touch.pageY;
 
@@ -112,8 +112,8 @@ class Card {
         if (event instanceof TouchEvent) {
             this.isActive = true;
 
-            if (event.changedTouches.length === 1) {
-                let touch = event.changedTouches.item(0)
+            if (event.touches.length === 1) {
+                let touch = event.touches.item(0);
                 let x = touch.pageX;
                 let y = touch.pageY;
 
@@ -476,6 +476,7 @@ class AuthCard extends Card {
 
         this.value = document.createElement('input');
         this.value.classList.add('loginInput');
+        this.value.classList.add('select');
         this.value.value = "";
         this.cardPanel.appendChild(this.value);
 
