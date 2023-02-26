@@ -58,6 +58,7 @@ class TrackballControls extends EventDispatcher {
 
             _lastAngle = 0;
 
+        let currentMovePrimaryEvent;
         const _eye = new Vector3(),
 
             _movePrev = new Vector2(),
@@ -424,7 +425,9 @@ class TrackballControls extends EventDispatcher {
         }
 
         function onPointerMove(event) {
-
+            if (event.isPrimary) {
+                currentMovePrimaryEvent = event;
+            }
             if (scope.enabled === false || isCardMove) return;
 
             if (event.pointerType === 'touch') {
@@ -645,7 +648,8 @@ class TrackballControls extends EventDispatcher {
         }
 
         function onTouchMove(event) {
-
+            // oldX = event.pageX;
+            // oldY = event.pageY;
             trackPointer(event);
 
             switch (_pointers.length) {
@@ -653,7 +657,7 @@ class TrackballControls extends EventDispatcher {
                 case 1:
                     // _movePrev.copy(_moveCurr);
                     // _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
-
+                    // _panStart.copy(getMouseOnScreen(oldX, oldY));
                     const x = event.pageX;
                     const y = event.pageY;
                     _panEnd.copy(getMouseOnScreen(x, y));
@@ -694,16 +698,16 @@ class TrackballControls extends EventDispatcher {
                     // eventBus.fireEvent("canMoveCard", {isMove: true});
                     for (let i = 0; i < _pointers.length; i++) {
 
-                        if (_pointers[i].pointerId !== event.pointerId) {
-                            const x = _pointers[i].pageX;
-                            const y = _pointers[i].pageY;
+                        // if (_pointers[i].pointerId !== event.pointerId) {
+                            const x = currentMovePrimaryEvent.pageX;
+                            const y = currentMovePrimaryEvent.pageY;
                             _panStart.copy(getMouseOnScreen(x, y));
                             _panEnd.copy(_panStart);
-                            // const position = _pointerPositions[_pointers[i].pointerId];
-                            // _moveCurr.copy(getMouseOnCircle(position.x, position.y));
-                            // _movePrev.copy(_moveCurr);
-                            break;
-                        }
+                        //     const position = _pointerPositions[_pointers[i].pointerId];
+                        //     _moveCurr.copy(getMouseOnCircle(position.x, position.y));
+                        //     _movePrev.copy(_moveCurr);
+                        //     break;
+                        // }
                     }
                     break;
             }
