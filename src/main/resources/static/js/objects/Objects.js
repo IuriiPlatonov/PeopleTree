@@ -16,9 +16,8 @@ class Card {
         this.theme = theme;
         this.bind();
         this.init();
-
-        this.teta = 1320; /*1750 : 1290*/
-
+        let fi = window.outerHeight / window.outerWidth;
+        this.teta = 1320 * (fi < 1 ? 1 : fi); /*1750 : 1290*/
     }
 
     bind() {
@@ -45,13 +44,8 @@ class Card {
 
 
     initListener() {
-        /** события для мыши*/
-        this.cardPanel.addEventListener('mousedown', this.saveXY);
-        document.addEventListener('mouseup', this.clearXY);
-
-        /** события для сенсора*/
-        this.cardPanel.addEventListener('touchstart', this.saveXY);
-        document.addEventListener('touchend', this.clearXY);
+        this.cardPanel.addEventListener('pointerdown', this.saveXY);
+        document.addEventListener('pointerup', this.clearXY);
     }
 
 
@@ -60,11 +54,10 @@ class Card {
         RequestMappingUtils.post('/api/savePositions', json);
     }
 
-
     moveCard(event) {
-        event.stopPropagation();
-        if (event instanceof MouseEvent && event.button === 0) {
-
+        if (event.pointerType === 'mouse' || event.pointerType === 'touch') {
+            event.preventDefault();
+            event.stopPropagation();
             let x = event.pageX;
             let y = event.pageY;
 
@@ -75,27 +68,12 @@ class Card {
 
             this.drawConnectFunc('update');
         }
-        if (event instanceof TouchEvent) {
-            if (event.touches.length === 1) {
-                let touch = event.touches.item(0);
-                let x = touch.pageX;
-                let y = touch.pageY;
-
-                let new_x = this.delta_x + x / (1 / this.camera.position.z * this.teta);
-                let new_y = this.delta_y - y / (1 / this.camera.position.z * this.teta);
-                this.cardPanel.style.top = new_y + 'px';
-                this.cardPanel.style.left = new_x + 'px';
-
-                this.drawConnectFunc('update');
-            }
-        }
-
     }
 
     saveXY(event) {
-        event.stopPropagation();
-        if (event instanceof MouseEvent && event.button === 0) {
-
+        if (event.pointerType === 'mouse' && event.button === 0 || event.pointerType === 'touch') {
+            event.preventDefault();
+            event.stopPropagation();
             this.isActive = true;
 
             let x = event.pageX;
@@ -107,50 +85,21 @@ class Card {
             this.delta_x = x_block - x / (1 / this.camera.position.z * this.teta);
             this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
 
-            document.addEventListener("mousemove", this.moveCard);
+            let doc = document;
+    let win = window;
+            document.addEventListener("pointermove", this.moveCard);
         }
-        if (event instanceof TouchEvent) {
-            this.isActive = true;
-
-            if (event.touches.length === 1) {
-                let touch = event.touches.item(0);
-                let x = touch.pageX;
-                let y = touch.pageY;
-
-                let x_block = this.cardPanel.offsetLeft;
-                let y_block = this.cardPanel.offsetTop;
-
-                this.delta_x = x_block - x / (1 / this.camera.position.z * this.teta);
-                this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
-
-                document.addEventListener("touchmove", this.moveCard);
-            }
-        }
-
     }
 
     clearXY(event) {
-        event.stopPropagation();
-        if (event instanceof MouseEvent && event.button === 0) {
+        if (event.pointerType === 'mouse' && event.button === 0 || event.pointerType === 'touch') {
+            event.preventDefault();
+            event.stopPropagation();
             this.cardBean.posX = this.cardPanel.style.left.replace("px", "");
             this.cardBean.posY = this.cardPanel.style.top.replace("px", "");
 
 
-            document.removeEventListener("mousemove", this.moveCard);
-
-            if (this.isActive) {
-                this.updateCardPosition();
-                this.eventBus.fireEvent("updateTarget", this.cardBean.id);
-            }
-            this.isActive = false;
-        }
-        if (event instanceof TouchEvent) {
-            this.isActive = true;
-
-            this.cardBean.posX = this.cardPanel.style.left.replace("px", "");
-            this.cardBean.posY = this.cardPanel.style.top.replace("px", "");
-
-            document.removeEventListener("touchmove", this.moveCard);
+            document.removeEventListener("pointermove", this.moveCard);
 
             if (this.isActive) {
                 this.updateCardPosition();
