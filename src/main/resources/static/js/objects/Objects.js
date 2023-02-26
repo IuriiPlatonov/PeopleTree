@@ -52,7 +52,7 @@ class Card {
         document.addEventListener('pointerup', this.clearXY);
         document.removeEventListener('pointercancel', this.removePointer);
         this.eventBus.addEventListener("canMoveCard", function (data) {
-            canMove = data;
+            canMove = data.isMove;
         });
     }
 
