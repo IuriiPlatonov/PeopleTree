@@ -4,6 +4,8 @@ import * as BEAN from 'beans';
 
 
 class Card {
+    pointer = [];
+
     constructor(cardBean, camera, eventBus, theme, drawConnectFunc) {
         this.camera = camera;
         this.cardBean = cardBean;
@@ -18,6 +20,7 @@ class Card {
         this.init();
         let fi = window.outerHeight / window.outerWidth;
         this.teta = 1320 * (fi < 1 ? 1 : fi); /*1750 : 1290*/
+
     }
 
     bind() {
@@ -26,7 +29,7 @@ class Card {
         this.saveXY = this.saveXY.bind(this);
         this.clearXY = this.clearXY.bind(this);
         this.init = this.init.bind(this);
-
+        this.removePointer = this.removePointer.bind(this);
     }
 
     init() {
@@ -46,6 +49,7 @@ class Card {
     initListener() {
         this.cardPanel.addEventListener('pointerdown', this.saveXY);
         document.addEventListener('pointerup', this.clearXY);
+        document.removeEventListener('pointercancel', this.removePointer);
     }
 
 
@@ -55,7 +59,8 @@ class Card {
     }
 
     moveCard(event) {
-        if (event.pointerType === 'mouse' || event.pointerType === 'touch') {
+        if (event.pointerType === 'mouse'
+            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary) {
             event.preventDefault();
             event.stopPropagation();
             let x = event.pageX;
@@ -70,8 +75,24 @@ class Card {
         }
     }
 
+    removePointer(event) {
+        for (let i = 0; i < this.pointer.length; i++) {
+            if (this.pointer[i].pointerId === event.pointerId) {
+                this.pointer.splice(i, 1);
+                return;
+            }
+        }
+    }
+
+    addPointer(event) {
+        this.pointer.push(event);
+    }
+
     saveXY(event) {
-        if (event.pointerType === 'mouse' && event.button === 0 || event.pointerType === 'touch') {
+        this.addPointer(event);
+
+        if (event.pointerType === 'mouse' && event.button === 0
+            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary) {
             event.preventDefault();
             event.stopPropagation();
             this.isActive = true;
@@ -86,13 +107,15 @@ class Card {
             this.delta_y = y_block + y / (1 / this.camera.position.z * this.teta);
 
             let doc = document;
-    let win = window;
+            let win = window;
             document.addEventListener("pointermove", this.moveCard);
         }
     }
 
     clearXY(event) {
-        if (event.pointerType === 'mouse' && event.button === 0 || event.pointerType === 'touch') {
+        this.removePointer(event);
+        if (event.pointerType === 'mouse' && event.button === 0
+            || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary) {
             event.preventDefault();
             event.stopPropagation();
             this.cardBean.posX = this.cardPanel.style.left.replace("px", "");
