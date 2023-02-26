@@ -635,7 +635,7 @@ class TrackballControls extends EventDispatcher {
                     _panEnd.copy(_panStart);
                     break;
                 default: // 2 or more
-                    eventBus.fireEvent("canMoveCard", false);
+                    this.eventBus.fireEvent("canMoveCard", false);
                     _state = STATE.TOUCH_ZOOM_PAN;
                     const dx = _pointers[0].pageX - _pointers[1].pageX;
                     const dy = _pointers[0].pageY - _pointers[1].pageY;
@@ -696,7 +696,7 @@ class TrackballControls extends EventDispatcher {
                     break;
 
                 case 2:
-                    eventBus.fireEvent("canMoveCard", true);
+                    this.eventBus.fireEvent("canMoveCard", true);
                     _state = STATE.TOUCH_ZOOM_PAN;
 
                     for (let i = 0; i < _pointers.length; i++) {

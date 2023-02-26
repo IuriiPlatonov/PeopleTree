@@ -47,11 +47,12 @@ class Card {
 
 
     initListener() {
+        let canMove =  this.canMove;
         this.cardPanel.addEventListener('pointerdown', this.saveXY);
         document.addEventListener('pointerup', this.clearXY);
         document.removeEventListener('pointercancel', this.removePointer);
         this.eventBus.addEventListener("canMoveCard", function (data) {
-            this.canMove = data;
+            canMove = data;
         });
     }
 
