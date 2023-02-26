@@ -99,7 +99,7 @@ class Card {
             || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary && this.canMove) {
             event.preventDefault();
             event.stopPropagation();
-            this.eventBus.fireEvent("canMoveCard", {isMove: false});
+            this.eventBus.fireEvent("canMoveCard", {isMove: true});
             this.isActive = true;
 
             let x = event.pageX;
@@ -116,12 +116,12 @@ class Card {
     }
 
     clearXY(event) {
-        this.removePointer(event);
+
         if (event.pointerType === 'mouse' && event.button === 0
             || event.pointerType === 'touch' && this.pointer.length === 1 && event.isPrimary && this.canMove) {
             event.preventDefault();
             event.stopPropagation();
-            this.eventBus.fireEvent("canMoveCard", {isMove: true});
+            this.eventBus.fireEvent("canMoveCard", {isMove: false});
             this.cardBean.posX = this.cardPanel.style.left.replace("px", "");
             this.cardBean.posY = this.cardPanel.style.top.replace("px", "");
 
@@ -134,6 +134,7 @@ class Card {
             }
             this.isActive = false;
         }
+        this.removePointer(event);
     }
 
     getPosX() {

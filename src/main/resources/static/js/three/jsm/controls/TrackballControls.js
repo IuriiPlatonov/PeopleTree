@@ -38,7 +38,7 @@ class TrackballControls extends EventDispatcher {
         this.maxDistance = Infinity;
 
         this.keys = ['KeyA' /*A*/, 'KeyS' /*S*/, 'KeyD' /*D*/];
-        let canMove = true;
+        let isCardMove = true;
         this.mouseButtons = {LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN};
 
         // internals
@@ -399,7 +399,7 @@ class TrackballControls extends EventDispatcher {
 
         function onPointerDown(event) {
 
-            if (scope.enabled === false && !canMove) return;
+            if (scope.enabled === false || isCardMove) return;
 
             if (_pointers.length === 0) {
 
@@ -425,7 +425,7 @@ class TrackballControls extends EventDispatcher {
 
         function onPointerMove(event) {
 
-            if (scope.enabled === false && !canMove) return;
+            if (scope.enabled === false || isCardMove) return;
 
             if (event.pointerType === 'touch') {
                 onTouchMove(event);
@@ -437,7 +437,7 @@ class TrackballControls extends EventDispatcher {
         }
 
         function onPointerUp(event) {
-            if (scope.enabled === false && !canMove) return;
+            if (scope.enabled === false || isCardMove) return;
 
             if (event.pointerType === 'touch') {
                 onTouchEnd(event);
@@ -623,11 +623,11 @@ class TrackballControls extends EventDispatcher {
                     const y = event.pageY;
                     _panStart.copy(getMouseOnScreen(x, y));
                     _panEnd.copy(_panStart);
-
+                    eventBus.fireEvent("canMoveCard", {isMove: false});
                     break;
                 default: // 2 or more
 
-                    eventBus.fireEvent("canMoveCard", {isMove: false});
+
                     _state = STATE.TOUCH_ZOOM_PAN;
                     const dx = _pointers[0].pageX - _pointers[1].pageX;
                     const dy = _pointers[0].pageY - _pointers[1].pageY;
@@ -685,24 +685,22 @@ class TrackballControls extends EventDispatcher {
                     // _state = STATE.TOUCH_ROTATE;
                     // _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
                     // _movePrev.copy(_moveCurr);
+                    eventBus.fireEvent("canMoveCard", {isMove: true});
                     break;
 
                 case 2:
-                    eventBus.fireEvent("canMoveCard", {isMove: true});
+
                     _state = STATE.TOUCH_ZOOM_PAN;
-                    const x = event.pageX;
-                    const y = event.pageY;
-                    _panStart.copy(getMouseOnScreen(x, y));
-                    _panEnd.copy(_panStart);
-                    // for (let i = 0; i < _pointers.length; i++) {
-                    //
-                    //     if (_pointers[i].pointerId !== event.pointerId) {
-                    //         const position = _pointerPositions[_pointers[i].pointerId];
-                    //         _moveCurr.copy(getMouseOnCircle(position.x, position.y));
-                    //         _movePrev.copy(_moveCurr);
-                    //         break;
-                    //     }
-                    // }
+
+                    for (let i = 0; i < _pointers.length; i++) {
+
+                        if (_pointers[i].pointerId !== event.pointerId) {
+                            const position = _pointerPositions[_pointers[i].pointerId];
+                            _moveCurr.copy(getMouseOnCircle(position.x, position.y));
+                            _movePrev.copy(_moveCurr);
+                            break;
+                        }
+                    }
                     break;
             }
 
@@ -786,7 +784,7 @@ class TrackballControls extends EventDispatcher {
         this.domElement.addEventListener('pointercancel', onPointerCancel);
         this.domElement.addEventListener('wheel', onMouseWheel, {passive: false});
         this.eventBus.addEventListener("canMoveCard", function (data) {
-            canMove = data.isMove;
+            isCardMove = data.isMove;
         });
 
         window.addEventListener('keydown', keydown);
