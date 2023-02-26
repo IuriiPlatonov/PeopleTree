@@ -695,9 +695,13 @@ class TrackballControls extends EventDispatcher {
                     for (let i = 0; i < _pointers.length; i++) {
 
                         if (_pointers[i].pointerId !== event.pointerId) {
-                            const position = _pointerPositions[_pointers[i].pointerId];
-                            _moveCurr.copy(getMouseOnCircle(position.x, position.y));
-                            _movePrev.copy(_moveCurr);
+                            const x = _pointers[i].pageX;
+                            const y = _pointers[i].pageY;
+                            _panStart.copy(getMouseOnScreen(x, y));
+                            _panEnd.copy(_panStart);
+                            // const position = _pointerPositions[_pointers[i].pointerId];
+                            // _moveCurr.copy(getMouseOnCircle(position.x, position.y));
+                            // _movePrev.copy(_moveCurr);
                             break;
                         }
                     }
