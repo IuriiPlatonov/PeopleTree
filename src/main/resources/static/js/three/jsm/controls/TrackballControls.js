@@ -690,7 +690,10 @@ class TrackballControls extends EventDispatcher {
                 case 2:
                     eventBus.fireEvent("canMoveCard", {isMove: true});
                     _state = STATE.TOUCH_ZOOM_PAN;
-
+                    const x = event.pageX;
+                    const y = event.pageY;
+                    _panStart.copy(getMouseOnScreen(x, y));
+                    _panEnd.copy(_panStart);
                     // for (let i = 0; i < _pointers.length; i++) {
                     //
                     //     if (_pointers[i].pointerId !== event.pointerId) {
