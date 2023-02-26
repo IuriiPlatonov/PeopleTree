@@ -681,9 +681,10 @@ class TrackballControls extends EventDispatcher {
                     break;
 
                 case 1:
-                    _state = STATE.TOUCH_ROTATE;
-                    _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
-                    _movePrev.copy(_moveCurr);
+                    _state = STATE.NONE;
+                    // _state = STATE.TOUCH_ROTATE;
+                    // _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
+                    // _movePrev.copy(_moveCurr);
                     break;
 
                 case 2:
