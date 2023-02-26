@@ -46,7 +46,7 @@ class TrackballControls extends EventDispatcher {
         this.target = new Vector3();
 
         const EPS = 0.000001;
-
+        let moveMap = new Map();
         const lastPosition = new Vector3();
         let lastZoom = 1;
 
@@ -425,12 +425,11 @@ class TrackballControls extends EventDispatcher {
         }
 
         function onPointerMove(event) {
-            if (event.isPrimary) {
-                currentMovePrimaryEvent = event;
-            }
+
             if (scope.enabled === false || isCardMove) return;
 
             if (event.pointerType === 'touch') {
+                moveMap.set(event.isPrimary, event);
                 onTouchMove(event);
             }
             if (event.pointerType === 'mouse') {
@@ -699,10 +698,11 @@ class TrackballControls extends EventDispatcher {
                     for (let i = 0; i < _pointers.length; i++) {
 
                         // if (_pointers[i].pointerId !== event.pointerId) {
-                            const x = currentMovePrimaryEvent.pageX;
-                            const y = currentMovePrimaryEvent.pageY;
-                            _panStart.copy(getMouseOnScreen(x, y));
-                            _panEnd.copy(_panStart);
+                        let e = moveMap.get(!event.isPrimary);
+                        const x = e.pageX;
+                        const y = e.pageY;
+                        _panStart.copy(getMouseOnScreen(x, y));
+                        _panEnd.copy(_panStart);
                         //     const position = _pointerPositions[_pointers[i].pointerId];
                         //     _moveCurr.copy(getMouseOnCircle(position.x, position.y));
                         //     _movePrev.copy(_moveCurr);
