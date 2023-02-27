@@ -684,26 +684,15 @@ class TrackballControls extends EventDispatcher {
                     break;
 
                 case 1:
-                    _state = STATE.NONE;
-                    // _state = STATE.TOUCH_ROTATE;
-                    // _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
-                    // _movePrev.copy(_moveCurr);
+                    //  _state = STATE.NONE;
+                    _state = STATE.TOUCH_ZOOM_PAN;
+                    _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
+                    _movePrev.copy(_moveCurr);
 
                     break;
 
                 case 2:
-
                     _state = STATE.TOUCH_ZOOM_PAN;
-                    // eventBus.fireEvent("canMoveCard", {isMove: true});
-                    moveMap.forEach((value, key) => {
-                        if (key !== event.pointerId){
-                            const x = value.pageX;
-                            const y = value.pageY;
-                            _panStart.copy(getMouseOnScreen(x, y));
-                            _panEnd.copy(_panStart);
-                            moveMap.delete(key);
-                        }
-                    });
                     for (let i = 0; i < _pointers.length; i++) {
                         if (_pointers[i].pointerId !== event.pointerId) {
                             const position = _pointerPositions[_pointers[i].pointerId];
@@ -714,7 +703,17 @@ class TrackballControls extends EventDispatcher {
                     }
                     break;
             }
-
+            if (moveMap.size > 1) {
+                moveMap.forEach((value, key) => {
+                    if (key !== event.pointerId) {
+                        const x = value.pageX;
+                        const y = value.pageY;
+                        _panStart.copy(getMouseOnScreen(x, y));
+                        _panEnd.copy(_panStart);
+                        moveMap.delete(key);
+                    }
+                });
+            }
             scope.dispatchEvent(_endEvent);
 
         }
