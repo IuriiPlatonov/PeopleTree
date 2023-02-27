@@ -429,7 +429,7 @@ class TrackballControls extends EventDispatcher {
             if (scope.enabled === false || isCardMove) return;
 
             if (event.pointerType === 'touch') {
-                moveMap.set(event.isPrimary, event);
+                moveMap.set(event.pointerId, event);
                 onTouchMove(event);
             }
             if (event.pointerType === 'mouse') {
@@ -698,11 +698,15 @@ class TrackballControls extends EventDispatcher {
                     for (let i = 0; i < _pointers.length; i++) {
 
                         // if (_pointers[i].pointerId !== event.pointerId) {
-                        let e = moveMap.get(!event.isPrimary);
-                        const x = e.pageX;
-                        const y = e.pageY;
-                        _panStart.copy(getMouseOnScreen(x, y));
-                        _panEnd.copy(_panStart);
+                        moveMap.forEach((value, key) => {
+                            if (key === event.pointerId){
+                                const x = value.pageX;
+                                const y = value.pageY;
+                                _panStart.copy(getMouseOnScreen(x, y));
+                                _panEnd.copy(_panStart);
+                            }
+                        });
+
                         //     const position = _pointerPositions[_pointers[i].pointerId];
                         //     _moveCurr.copy(getMouseOnCircle(position.x, position.y));
                         //     _movePrev.copy(_moveCurr);
