@@ -699,11 +699,12 @@ class TrackballControls extends EventDispatcher {
 
                         // if (_pointers[i].pointerId !== event.pointerId) {
                         moveMap.forEach((value, key) => {
-                            if (key === event.pointerId){
+                            if (key !== event.pointerId){
                                 const x = value.pageX;
                                 const y = value.pageY;
                                 _panStart.copy(getMouseOnScreen(x, y));
                                 _panEnd.copy(_panStart);
+                                moveMap.delete(key);
                             }
                         });
 
