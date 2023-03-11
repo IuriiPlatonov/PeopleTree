@@ -97,7 +97,8 @@ public class CardServiceImpl implements CardService {
     }
 
     private String generateNewNearCord(String oldValue) {
-        return String.valueOf(Double.parseDouble(oldValue) + (200 * Math.random() > 0.5 ? -1 : 1) + (150 * Math.random()));
+        double coordinate = StringUtils.isBlank(oldValue) ? 0 : Double.parseDouble(oldValue);
+        return String.valueOf(coordinate + (200 * Math.random() > 0.5 ? -1 : 1) + (150 * Math.random()));
     }
 
     @Override
