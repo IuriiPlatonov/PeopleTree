@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DefaultBean {
     private String id;
-    private String name;
+    private String data;
 }

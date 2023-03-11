@@ -3,6 +3,7 @@ import * as BEAN from 'beans';
 import * as OBJECT from 'objects';
 import * as MENU from 'menu';
 import * as ENUM from 'enum';
+import * as DIALOG from 'dialogs';
 
 import {TWEEN} from 'three/addons/libs/tween.module.min.js';
 import {TrackballControls} from 'three/addons/controls/TrackballControls.js';
@@ -16,6 +17,15 @@ let checkAuthUrl = "/api/auth/checkAuth";
 let authUrl = "/api/auth/login";
 let registrationUrl = "/api/auth/registration";
 let checkValidUrl = "/api/auth/checkValid";
+let workspacesUrl = "/api/workspaces";
+let workspaceUrl = "/api/cards";
+let getCardPatternsUrl = "/api/cardPatterns";
+let createNewCardUrl = "/api/createCard";
+let getCardChildrenCountUrl = "/api/cardChildrenCount";
+let deleteCardUrl = 'api/deleteCard';
+let deleteWorkspaceUrl = 'api/deleteWorkspace';
+let changeParentUrl = "api/changeParent";
+let saveTextValueUrl = "api/saveTextValue";
 
 let camera, scene, renderer;
 let controls;
@@ -69,7 +79,31 @@ function initEventListeners() {
     eventBus.addEventListener("updateTarget", function (id) {
         updateTarget(id);
     });
+    eventBus.addEventListener("dynamicCardDblClick", function (id) {
+        changeWorkspace(id);
+    });
+    eventBus.addEventListener("openAddCardDialog", function (bean) {
+        openAddCardDialog(bean);
+    });
+    eventBus.addEventListener("openDeleteCardDialog", function (bean) {
+        openDeleteCardDialog(bean);
+    });
+    eventBus.addEventListener("setSessionCardParameters", function (bean) {
+        setSessionCardParameters(bean.id, bean.posX, bean.posY, bean.posZ);
+    });
+    eventBus.addEventListener("saveTextValue", function (bean) {
+        saveTextValue(bean);
+    });
 
+
+}
+
+
+function setSessionCardParameters(id, posX, posY, posZ) {
+    sessionStorage.setItem('cardId', id);
+    sessionStorage.setItem('posX', posX);
+    sessionStorage.setItem('posY', posY);
+    sessionStorage.setItem('posZ', posZ);
 }
 
 function onWindowResize() {
@@ -89,19 +123,36 @@ function animate() {
 
 /**
  * Проверяем авторизацию.
- * Если пользователь авторизован - рисуем сцену с карточками.
- * Если не авторизован - рисуем сцену авторизации
+ * Если не авторизован - рисуем сцену авторизации.
+ * Если пользователь авторизован - рисуем сцену с карточками рабочих столов.
+ * Если в sessionStorage есть workspaceId - рисуем сам рабочий стол.
  */
 function checkAuth() {
     RequestMappingUtils.get(checkAuthUrl, function (response) {
+        let isAuthorised = response.authorized;
+        let username = response.username;
+        let workspaceId = sessionStorage.getItem('workspaceId');
+
         removeObjects(new Map(objects));
-        if (response.authorized) {
-            sendChangeUsernameEvent(response.username);
-            createPeopleTree();
+        updateMenuElements(isAuthorised, username);
+
+        if (isAuthorised && !workspaceId) {
+            getWorkspaces();
+        } else if (isAuthorised && workspaceId) {
+            getCardsForWorkspace(workspaceId);
         } else {
             createLoginObjects();
         }
     });
+}
+
+/**
+ * Обновляем имя пользователя и видимость кнопок в меню
+ */
+function updateMenuElements(isAuthorised, username) {
+    sessionStorage.setItem('isAuthorised', isAuthorised);
+    localStorage.setItem('username', username ? username : "");
+    eventBus.fireEvent("changeUserName");
 }
 
 /**
@@ -110,8 +161,9 @@ function checkAuth() {
 function removeObjects(objectsToDel) {
     objectsToDel.forEach(function (entry) {
         let key = entry.object ? entry.object.getId() : entry.id;
+        key = key ? key : entry.cardId;
         setRandomCordToObjectById(key);
-        transform(key, 1000, function (tween, id) {
+        transform(key, 500, function (tween, id) {
             scene.remove(objects.get(id) ? objects.get(id).objectCSS : '');
             scene.remove(bones.get(id));
             bones.delete(id);
@@ -128,7 +180,7 @@ function removeObjectById(id) {
     if (objects.get(id)) {
         setRandomCordToObjectById(id);
 
-        transform(id, 1000, function () {
+        transform(id, 500, function () {
             scene.remove(objects.get(id).objectCSS);
             scene.remove(bones.get(id));
             bones.delete(id);
@@ -151,7 +203,7 @@ function addObject(object) {
  */
 function updateObjectParent(obj) {
     obj.children.forEach(function (entry) {
-        let object = objects.get(entry.id).object;
+        let object = objects.get(entry.cardId).object;
         object.setParentId(obj.parent[0].parentId);
     });
 
@@ -182,8 +234,135 @@ function initPeopleMap(people) {
     });
 }
 
-function sendChangeUsernameEvent(name) {
-    eventBus.fireEvent("changeUserName", name);
+/**
+ * Рисуем сцену выбора рабочих столов для авторизованного пользователя
+ */
+function initWorkspaces(workspaces) {
+    workspaces.forEach((value, key) => {
+        let theme = menu.theme;
+        let workspace = new OBJECT.DynamicCard(key, value, camera, eventBus, theme, redrawConnections);
+        addObject(workspace);
+    });
+}
+
+function changeWorkspace(id) {
+    if (isItWorkspace()) {
+        sessionStorage.setItem('workspaceId', id);
+        checkAuth();
+        setSessionCardParameters('', 0, 0, 0);
+    }
+}
+
+function isItWorkspace() {
+    return !sessionStorage.getItem('workspaceId') || sessionStorage.getItem('workspaceId') === '';
+}
+
+function initCardsForWorkspace(cards) {
+    cards.forEach((value, key) => {
+        let theme = menu.theme;
+        let workspace = new OBJECT.DynamicCard(key, value, camera, eventBus, theme, redrawConnections);
+        addObject(workspace);
+    });
+}
+
+/**
+ * Подгружаем шаблоны карточек, передаем их в диалог по созданию новой карточки,
+ * в случае удачи шлем запрос на сохранение.
+ */
+function openAddCardDialog(bean) {
+    RequestMappingUtils.get(getCardPatternsUrl, function (cards) {
+        new DIALOG.AddCardDialog(new Map(Object.entries(cards)), function (cardId) {
+            let workspaceId = sessionStorage.getItem('workspaceId');
+            let json = JSON.stringify({
+                cardId: cardId, workspaceId: workspaceId, parentId: bean.parentId,
+                posX: bean.posX, posY: bean.posY
+            });
+            RequestMappingUtils.postWithResponse(createNewCardUrl, json, function (card) {
+                let cardMap = new Map(Object.entries(card));
+                let theme = menu.theme;
+                cardMap.forEach((value, key) => {
+                    let workspace = new OBJECT.DynamicCard(key, value, camera, eventBus, theme, redrawConnections);
+                    addObject(workspace);
+                });
+            });
+        });
+    });
+}
+
+/**
+ * Удаляем карточку рабочего стола или рабочий стол.
+ * Если у карточки есть дочерние элементы, спрашиваем,
+ * удалить все дочерние элементы или привязать их к вышестоящему узлу
+ */
+function openDeleteCardDialog(bean) {
+    if (isItWorkspace()) {
+        createDeleteWorkspaceDialog(bean);
+    } else {
+        RequestMappingUtils.get(getCardChildrenCountUrl + '?' + new URLSearchParams({cardId: bean.cardId}), function (response) {
+            let childrenCount = parseInt(response.data);
+            if (childrenCount === 1) {
+                createDeleteCardDialog(bean);
+            } else {
+                createDelAllOrReplaceChildrenDialog(bean);
+            }
+        });
+    }
+}
+
+function createDeleteCardDialog(bean) {
+    new DIALOG.InfoDialog("Вы действительно хотите удалить карточку?", ENUM.DialogType.OkNo, function () {
+        let json = JSON.stringify({cardId: bean.cardId});
+        RequestMappingUtils.postWithResponse(deleteCardUrl, json, function (cards) {
+            removeObjects(cards);
+        });
+    });
+}
+
+function createDeleteWorkspaceDialog(bean) {
+    new DIALOG.InfoDialog("Вы действительно хотите удалить рабочий стол?", ENUM.DialogType.OkNo, function () {
+        let json = JSON.stringify({workspaceId: bean.workspaceId, cardId: bean.cardId});
+        RequestMappingUtils.postWithResponse(deleteWorkspaceUrl, json, function (cards) {
+            removeObjects(cards);
+        });
+    });
+}
+
+function createDelAllOrReplaceChildrenDialog(bean) {
+    let dialog = new DIALOG.InfoDialog("Вы действительно хотите удалить карточку?<br>" +
+        "'Да' - все потомки будут удалены.<br>" +
+        "'Выше' - все потомки будут привязаны выше.",
+        ENUM.DialogType.OkNoCancel,
+        function () {
+            let json = JSON.stringify({cardId: bean.cardId});
+            RequestMappingUtils.postWithResponse(deleteCardUrl, json, function (cards) {
+                removeObjects(cards);
+            });
+        },
+        function () {
+            let json = JSON.stringify({cardId: bean.cardId, parentId: bean.parentId});
+            RequestMappingUtils.postWithResponse(changeParentUrl, json, function (deleteParentResponse) {
+                let parent = [deleteParentResponse.parent];
+                let children = deleteParentResponse.children;
+                updateObjectParent({parent: parent, children: children});
+                removeObjects(parent);
+            });
+        });
+    dialog.setCancelButtonText('Выше');
+}
+
+function saveTextValue(bean) {
+    let json = JSON.stringify({value: bean.value, elementId: bean.elementId});
+    RequestMappingUtils.post(saveTextValueUrl, json);
+}
+
+/**
+ * Рисуем сцену рабочего стола для авторизованного пользователя
+ */
+function getCardsForWorkspace(id) {
+    let json = JSON.stringify({workspaceId: id});
+    RequestMappingUtils.postWithResponse(workspaceUrl, json, function (cards) {
+        initCardsForWorkspace(new Map(Object.entries(cards)));
+    });
 }
 
 /**
@@ -355,24 +534,31 @@ function connectToChildNode(id, start_x, start_y, start_z, camera) {
 }
 
 /**
- * AJAX запрос на карточки авторизованного пользователя
+ * AJAX запрос на рабочие столы авторизованного пользователя
  */
-function createPeopleTree() {
-    RequestMappingUtils.get(getPeopleUrl, function (people) {
-        initPeopleMap(people);
+function getWorkspaces() {
+    RequestMappingUtils.get(workspacesUrl, function (resp) {
+        initWorkspaces(new Map(Object.entries(resp)));
     });
+    // RequestMappingUtils.get(getPeopleUrl, function (people) {
+    //     initPeopleMap(people);
+    // });
 }
 
 function createInfoObject(parentId, caption, message, x, y, height) {
     let infoBean = new BEAN.AuthBean(UUID.generate(), parentId, caption, message, x, y, height, ENUM.InfoType.info);
     let infoObject = new OBJECT.InfoCard(infoBean, camera, eventBus, menu.theme, redrawConnections, function () {
         removeObjectById(infoObject.getId());
+        infoIds.delete(parentId);
     });
     addAuthObject(infoObject);
     return infoObject.getId();
 }
 
-/** Объекты авторизации*/
+/** Объекты авторизации
+ *  Сценарии для логина и регистрации
+ *  TODO Потом надо будеть вынести их из этого класса
+ * */
 
 /** ЛОГИН
  *  В случае если пользователь не авторизован создаем сцену для авторизации
@@ -529,11 +715,16 @@ function checkValidForObject(object, fieldTypeToValidation) {
         } else {
             object.setBorderRed();
             object.setValid(false);
+            if (infoIds.get(object.getId())
+                && objects.get(infoIds.get(object.getId())).object.getMessage() === response.message) {
+                return;
+            }
             removeObjectById(infoIds.get(object.getId()));
             infoIds.delete(object.getId());
             let id = createInfoObject(object.getId(), "Инфо", response.message,
                 object.getPosX(), object.getPosY() + 100, 300);
             infoIds.set(object.getId(), id);
+
         }
     });
 }

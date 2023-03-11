@@ -8,33 +8,51 @@ class MainMenu {
         this.theme = ENUM.ThemeType.dark;
         this.bind();
         this.init();
-        this.initListener();
     }
 
     bind() {
-        this.setVisible = this.setVisible.bind(this);
+        this.setVisibleMenuButton = this.setVisibleMenuButton.bind(this);
+        this.setVisibleOtherButtons = this.setVisibleOtherButtons.bind(this);
         this.setTheme = this.setTheme.bind(this);
         this.updateMenuData = this.updateMenuData.bind(this);
-
     }
 
     init() {
         this.initMenuButton();
         this.initSettingButtonPanel();
+        this.initHomeButton();
+        this.initAddButton();
+        this.initListener();
 
     }
 
     initMenuButton() {
         this.settingButton = document.createElement('img');
         this.settingButton.classList.add('mainMenuButton');
-        this.settingButton.setAttribute('src', 'images/darkTheme/menu.svg');
+        this.settingButton.setAttribute('src', 'images/darkTheme/settings.svg');
         document.body.appendChild(this.settingButton);
+    }
+
+    initHomeButton() {
+        this.homeButton = document.createElement('img');
+        this.homeButton.classList.add('mainMenuHomeButton');
+        this.homeButton.style.display = 'none';
+        this.homeButton.setAttribute('src', 'images/darkTheme/menu.svg');
+        document.body.appendChild(this.homeButton);
+    }
+
+    initAddButton() {
+        this.addButton = document.createElement('img');
+        this.addButton.classList.add('mainMenuPlusButton');
+        this.addButton.style.display = 'none';
+        this.addButton.setAttribute('src', 'images/darkTheme/plus.svg');
+        document.body.appendChild(this.addButton);
     }
 
     initSettingButtonPanel() {
         this.mainMenuPanel = document.createElement('div');
         this.mainMenuPanel.classList.add('mainMenuPanel');
-        this.mainMenuPanel.style.display = 'none'
+        this.mainMenuPanel.style.display = 'none';
         document.body.appendChild(this.mainMenuPanel);
 
         let themePanel = document.createElement('fieldSet');
@@ -73,10 +91,21 @@ class MainMenu {
     }
 
     updateMenuData() {
-        this.loginLegend.innerHTML = 'Гость';
+        let username = localStorage.getItem('username');
+        this.loginLegend.innerHTML = username ? username : "Гость";
+        this.logoutButton.style.display = username ? 'block' : 'none';
     }
 
-    setVisible() {
+    setVisibleOtherButtons() {
+        let isAuthorised = sessionStorage.getItem('isAuthorised') === 'true';
+
+        if (this.mainMenuPanel.style.display === 'none' && isAuthorised) this.homeButton.style.display = 'block'
+        else this.homeButton.style.display = 'none';
+        if (this.mainMenuPanel.style.display === 'none' && isAuthorised) this.addButton.style.display = 'block'
+        else this.addButton.style.display = 'none';
+    }
+
+    setVisibleMenuButton() {
         if (this.mainMenuPanel.style.display === 'block') this.mainMenuPanel.style.display = 'none'
         else this.mainMenuPanel.style.display = 'block';
     }
@@ -85,14 +114,40 @@ class MainMenu {
         let settingButton = this.settingButton;
         let eventBus = this.eventBus;
         let cssFiles = this.cssFiles;
-        let setVisible = this.setVisible;
+        let setVisibleMenuButton = this.setVisibleMenuButton;
         let setTheme = this.setTheme;
         let loginLegend = this.loginLegend;
         let logoutButton = this.logoutButton;
+        let homeButton = this.homeButton;
+        let addButton = this.addButton;
+        let updateMenuData = this.updateMenuData;
+        let setVisibleOtherButtons = this.setVisibleOtherButtons;
 
-        this.settingButton.addEventListener('click', function () {
-            setVisible();
+
+        this.settingButton.addEventListener('pointerdown', function () {
+            setVisibleMenuButton();
+            setVisibleOtherButtons();
         });
+
+        this.homeButton.addEventListener('pointerdown', function () {
+            if (sessionStorage.getItem('workspaceId')) {
+                sessionStorage.setItem('workspaceId', '');
+                eventBus.fireEvent("checkAuth");
+            }
+        });
+        this.eventBus.fireEvent("openAddCardDialog",
+            {parentId: this.id, posX: this.posX, posY: this.posY, posZ: this.posZ});
+
+        this.addButton.addEventListener('pointerdown', function () {
+            let cardId = sessionStorage.getItem('cardId');
+            let posX = sessionStorage.getItem('posX');
+            let posY = sessionStorage.getItem('posY');
+            let posZ = sessionStorage.getItem('posZ');
+                eventBus.fireEvent("openAddCardDialog",
+                    {parentId: cardId, posX: posX, posY: posY, posZ: posZ});
+        });
+
+
         this.whiteThemeButton.addEventListener('click', function () {
             let link = 'css/lightTheme/';
             for (let i = 0; i < cssFiles.length; i++) {
@@ -128,16 +183,20 @@ class MainMenu {
                 eventBus.fireEvent("checkAuth", null);
                 loginLegend.innerHTML = 'Гость';
                 logoutButton.style.display = 'none';
+                setVisibleOtherButtons();
+                setVisibleMenuButton();
             });
         });
 
         this.eventBus.addEventListener("changeTheme", function (data) {
-            settingButton.setAttribute('src', 'images/' + data.getName() + '/menu.svg');
+            settingButton.setAttribute('src', 'images/' + data.getName() + '/settings.svg');
+            homeButton.setAttribute('src', 'images/' + data.getName() + '/menu.svg');
+            addButton.setAttribute('src', 'images/' + data.getName() + '/plus.svg');
             setTheme(data);
         });
-        this.eventBus.addEventListener("changeUserName", function (data) {
-            loginLegend.innerHTML = data;
-            logoutButton.style.display = 'block';
+        this.eventBus.addEventListener("changeUserName", function () {
+            updateMenuData();
+            setVisibleOtherButtons();
         });
     }
 

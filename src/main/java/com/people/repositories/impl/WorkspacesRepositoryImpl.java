@@ -1,7 +1,7 @@
 package com.people.repositories.impl;
 
-import com.people.model.Workspace;
-import com.people.model.mapper.WorkspaceMapper;
+import com.people.model.CardObject;
+import com.people.model.mapper.CardObjectMapper;
 import com.people.repositories.WorkspacesRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -26,36 +26,36 @@ public class WorkspacesRepositoryImpl implements WorkspacesRepository {
     private String workspace;
 
     @Override
-    public List<Workspace> getWorkspacesByUserId(String userId) {
+    public List<CardObject> getWorkspacesByUserId(String userId) {
         String sql = workspace;
         Map<String, Object> params = new HashMap<>();
         params.put("user_id", new BigDecimal(userId));
-        return namedParameterJdbcOperations.query(sql, params, new WorkspaceMapper());
+        return namedParameterJdbcOperations.query(sql, params, new CardObjectMapper());
     }
 
     @Override
-    public void create(Workspace object) {
+    public void create(CardObject object) {
         String sql = createWorkspace;
         Map<String, Object> params = new HashMap<>();
-        params.put("ws_id", new BigDecimal(object.getId()));
+        params.put("ws_id", new BigDecimal(object.getWorkspaceId()));
         params.put("user_id", new BigDecimal(object.getUserId()));
-        params.put("kind_id", StringUtils.isBlank(object.getKindId()) ? null : new BigDecimal(object.getKindId()));
+        params.put("card_id", StringUtils.isBlank(object.getCardId()) ? null : new BigDecimal(object.getCardId()));
 
         namedParameterJdbcOperations.update(sql, params);
     }
 
     @Override
-    public void update(Workspace object) {
+    public void update(CardObject object) {
 
     }
 
     @Override
-    public void delete(Workspace object) {
+    public void delete(CardObject object) {
 
     }
 
     @Override
-    public Workspace getById(String id) {
+    public CardObject getById(String id) {
         return null;
     }
 }

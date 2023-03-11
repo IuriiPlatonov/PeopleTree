@@ -1,10 +1,10 @@
 package com.people.repositories;
 
-import com.people.model.Workspace;
+import com.people.model.CardObject;
 
 import java.util.List;
 
-public interface WorkspacesRepository extends Repository<Workspace>{
+public interface WorkspacesRepository extends Repository<CardObject>{
 
-    List<Workspace> getWorkspacesByUserId(String userId);
+    List<CardObject> getWorkspacesByUserId(String userId);
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.people.dto.CardDto;
 
+import com.people.dto.ObjectDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +15,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeleteParentResponse {
-    private CardDto parent;
-    private List<CardDto> children;
+    private ObjectDto parent;
+    private List<ObjectDto> children;
 }

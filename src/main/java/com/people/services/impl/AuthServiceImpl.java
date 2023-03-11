@@ -1,7 +1,7 @@
 package com.people.services.impl;
 
 import com.people.dto.CardDto;
-import com.people.dto.WorkspaceDto;
+import com.people.dto.ObjectDto;
 import com.people.dto.request.AuthRequest;
 import com.people.dto.request.CheckRegFieldRequest;
 import com.people.dto.request.RegisterRequest;
@@ -38,7 +38,8 @@ public class AuthServiceImpl implements AuthService {
             "*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4]" +
             "[0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*" +
             "[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
-    private static final String PASSWORD_REGEX = "(?=.*[0-9])(?=.*[!@#$%^*])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!@#$%^*]{6,}";
+//    private static final String PASSWORD_REGEX = "(?=.*[0-9])(?=.*[!@#$%^*])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!@#$%^*]{6,}";
+    private static final String PASSWORD_REGEX = "[0-9a-zA-Z!@#$%^*]{6,}";
 
     private final UserRepository userRepository;
     private final CardService cardService;
@@ -52,8 +53,10 @@ public class AuthServiceImpl implements AuthService {
         return switch (type) {
             case NAME -> checkField(request.getText(), NAME_REGEX, "Минимальная длина 3 символа");
             case EMAIL -> checkEmailField(request.getText());
+//            case PASSWORD -> checkField(request.getText(), PASSWORD_REGEX, "Пароль должен содержать " +
+//                    "латинские строчные и заглавные буквы, цифры, спец. символы !@#$%^*, минимальная длина 6 знаков");
             case PASSWORD -> checkField(request.getText(), PASSWORD_REGEX, "Пароль должен содержать " +
-                    "латинские строчные и заглавные буквы, цифры, спец. символы !@#$%^*, минимальная длина 6 знаков");
+                    "не менее 6 знаков");
         };
     }
 
@@ -70,17 +73,17 @@ public class AuthServiceImpl implements AuthService {
 
         login(new AuthRequest(request.getEmail(), request.getPassword()));
 
-        var workspace = workspacesService.createWorkspace(WorkspaceDto.builder()
-                .userId(user.getId())
-                .build());
-
-        cardService.create(CardDto.builder()
-                .workspaceId(workspace.getId())
-                .firstName(user.getFirstName())
-                .secondName(user.getLastName())
-                .patronymic(user.getPatronymic())
-                .email(user.getEmail())
-                .build());
+//        var workspace = workspacesService.createWorkspace(ObjectDto.builder()
+//                .userId(user.getId())
+//                .build());
+//
+//        cardService.create(CardDto.builder()
+//                .workspaceId(workspace.getWorkspaceId())
+//                .firstName(user.getFirstName())
+//                .secondName(user.getLastName())
+//                .patronymic(user.getPatronymic())
+//                .email(user.getEmail())
+//                .build());
         return RegisterResponse.builder().build();
     }
 

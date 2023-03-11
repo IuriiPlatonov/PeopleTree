@@ -40,13 +40,12 @@
     margin-top: 4px;
     width: 54%;
     height: 90%;
-    margin-top: 4px;
     vertical-align: top;
     font-size: 12px;
-    font-weight: bolt;
-    font-stretch: ultra-expanded;
+/*    font-weight: bolt;*/
+/*    font-stretch: ultra-expanded;*/
     color: rgba(255, 255, 255, 0.75);
-    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+   /* text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);*/
 }
 
 .name {
@@ -67,6 +66,32 @@
     color: rgba(127, 255, 255, 0.75);
 }
 
+.controlButtons{
+    position: absolute;
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+    transition-duration: 0.2s;
+    transition-property: transform;
+    transition-timing-function: ease;
+    color: green;
+}
+
+.settingsButton {
+    top: 5px;
+    right: 5px;
+}
+
+.addButton {
+    top: 10px;
+    right: 5px;
+}
+
+.deleteButton {
+    bottom: 10px;
+    right: 5px;
+}
+
 .icon {
     position: static;
     cursor: pointer;
@@ -83,8 +108,7 @@
     margin-top: 240%;
 }
 
-
-.icon:hover {
+.icon:hover, .controlButtons:hover {
     transform: scale(1.5);
 }
 
@@ -169,7 +193,7 @@ html, body {
     font-size: 16px;
     font-weight: bold;
     color: rgba(255, 255, 255, 0.75);
-  //  text-shadow: 0 0 10px rgba(0, 255, 255, 0.15);
+/ / text-shadow: 0 0 10 px rgba(0, 255, 255, 0.15);
     outline: none;
 }
 
@@ -261,4 +285,82 @@ html, body {
 }
 
 .infoCardPanelButtonText {
+}
+
+.cardElementBorder {
+    border: 1px solid rgba(127, 255, 255, 0.25);
+    border-radius: 5px;
+    position: absolute;
+}
+
+.cardElementFlexCenter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cardElementFlexLeft {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cardElementCursorMove {
+    cursor: move;
+}
+
+.cardElementCursorText {
+    cursor: text;
+}
+
+.cardElementBackground {
+    background: black;
+}
+
+.cardElementShadow {
+    box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.5);
+}
+
+.cardElementFont {
+  /*  font-family: "Times New Roman", Georgia, Serif, serif;*/
+    text-shadow: none;
+    text-rendering: optimizeLegibility;
+    font-size: 14px;
+    color: rgba(127, 255, 255, 0.75);
+}
+
+.cardInputElementFont {
+    resize: none;
+    text-shadow: none;
+    text-rendering: optimizeLegibility;
+    font-size: 14px;
+    color: rgb(127, 255, 255);
+}
+
+
+.cardTextAreaScroll::-webkit-scrollbar {
+    width: 6px;
+    background-color: rgb(86 255 255 / 25%);
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.1);
+    -moz-box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: inset 0 0 2px rgb(0 0 0 / 0%);
+    cursor: default;
+}
+
+.cardTextAreaScroll::-webkit-scrollbar-thumb {
+    border-radius: 7px;
+    background-color: #9fd8f98f;
+    box-shadow: inset 0 0 6px rgb(0 239 255);
+    -moz-box-shadow: inset 0 0 6px rgb(0 239 255);
+    -webkit-box-shadow: inset 0 0 6px rgb(0 239 255);
+    -webkit-border-radius: 7px;
+    -moz-border-radius: 7px;
+    -ms-border-radius: 7px;
+    -o-border-radius: 7px;
+    cursor: default;
+}
+
+.cardPanelSelected {
+    box-shadow: 0px 0px 12px rgba(0, 255, 255, 0.75);
+    border: 1px solid rgba(127, 255, 255, 0.75);
 }

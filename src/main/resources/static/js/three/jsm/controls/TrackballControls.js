@@ -58,7 +58,6 @@ class TrackballControls extends EventDispatcher {
 
             _lastAngle = 0;
 
-        let currentMovePrimaryEvent;
         const _eye = new Vector3(),
 
             _movePrev = new Vector2(),
@@ -89,8 +88,8 @@ class TrackballControls extends EventDispatcher {
             const box = scope.domElement.getBoundingClientRect();
             // adjustments come from similar code in the jquery offset() function
             const d = scope.domElement.ownerDocument.documentElement;
-            scope.screen.left = box.left + window.pageXOffset - d.clientLeft;
-            scope.screen.top = box.top + window.pageYOffset - d.clientTop;
+            scope.screen.left = box.left + window.scrollX - d.clientLeft;
+            scope.screen.top = box.top + window.scrollY - d.clientTop;
             scope.screen.width = box.width;
             scope.screen.height = box.height;
 
@@ -616,9 +615,9 @@ class TrackballControls extends EventDispatcher {
             trackPointer(event);
             switch (_pointers.length) {
                 case 1:
-                    _state = STATE.TOUCH_ROTATE;
-                    _moveCurr.copy(getMouseOnCircle(_pointers[0].pageX, _pointers[0].pageY));
-                    _movePrev.copy(_moveCurr);
+                    _state = STATE.TOUCH_ZOOM_PAN;
+                    // _moveCurr.copy(getMouseOnCircle(_pointers[0].pageX, _pointers[0].pageY));
+                    // _movePrev.copy(_moveCurr);
 
                     /** Поменял сюда!*/
                     const x = event.pageX;
@@ -684,11 +683,11 @@ class TrackballControls extends EventDispatcher {
                     break;
 
                 case 1:
-                    //  _state = STATE.NONE;
-                    // _state = STATE.TOUCH_ZOOM_PAN;
-                    // _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
-                    // _movePrev.copy(_moveCurr);
-                    moveMap.clear();
+                     _state = STATE.NONE;
+                   //  _state = STATE.TOUCH_ZOOM_PAN;
+                    _moveCurr.copy(getMouseOnCircle(event.pageX, event.pageY));
+                    _movePrev.copy(_moveCurr);
+               //     moveMap.clear();
                     break;
 
                 case 2:
@@ -733,20 +732,14 @@ class TrackballControls extends EventDispatcher {
         }
 
         function removePointer(event) {
-
             delete _pointerPositions[event.pointerId];
-
             for (let i = 0; i < _pointers.length; i++) {
 
-                if (_pointers[i].pointerId == event.pointerId) {
+				if ( _pointers[ i ].pointerId == event.pointerId ) {
 
                     _pointers.splice(i, 1);
-                    return;
-
                 }
-
             }
-
         }
 
         function trackPointer(event) {

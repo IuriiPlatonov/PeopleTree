@@ -1,0 +1,1 @@
+delete from cards where card_id = :card_id;

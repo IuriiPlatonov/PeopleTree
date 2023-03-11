@@ -1,11 +1,15 @@
 package com.people.services;
 
-import com.people.dto.WorkspaceDto;
+import com.people.dto.ObjectDto;
 
+import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 public interface WorkspacesService {
-    WorkspaceDto createWorkspace(WorkspaceDto workspace);
+    Map<String, List<ObjectDto>> createWorkspace(ObjectDto object, Principal principal);
 
-    List<WorkspaceDto> getWorkspacesForUser(String userId);
+    List<ObjectDto> getWorkspacesForUser(String userId);
+
+    Map<String, List<ObjectDto>> getWorkspacesByUserEmail(String email);
 }
